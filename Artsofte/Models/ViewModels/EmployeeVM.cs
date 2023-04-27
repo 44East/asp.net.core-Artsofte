@@ -1,6 +1,4 @@
-﻿
-
-namespace Artsofte.Models
+﻿namespace Artsofte.Models.ViewModels
 {
     public class EmployeeVM
     {
@@ -9,10 +7,7 @@ namespace Artsofte.Models
         public string Surname { get; set; }
         public int Age { get; set; }
         public string Gender { get; set; }
-
-       
         public int DepartmentId { get; set; }
-     
         public int ProgrammingLanguageId { get; set; }
     }
 }

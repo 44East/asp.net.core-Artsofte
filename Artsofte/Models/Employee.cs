@@ -1,7 +1,4 @@
-﻿
-
-
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Artsofte.Models
 {
@@ -15,7 +12,6 @@ namespace Artsofte.Models
 
         [ForeignKey("Depatments ")]
         public int DepartmentId { get; set; }
-
         public Department Department { get; set; }
         [ForeignKey("ProgrammingLanguages ")]
         public int ProgrammingLanguageId { get; set; }

@@ -4,57 +4,7 @@
 @{
     ViewData["Title"] = "Create";
 }
-@*
-<h1>Create</h1>
 
-<h4>Employee</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form method="post">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group">
-                <label asp-for="Employee.Name" class="control-label"></label>
-                <input asp-for="Employee.Name" class="form-control" />
-                <span asp-validation-for="Employee.Name" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Employee.Surname" class="control-label"></label>
-                <input asp-for="Employee.Surname" class="form-control" />
-                <span asp-validation-for="Employee.Surname" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Employee.Age" class="control-label"></label>
-                <input asp-for="Employee.Age" class="form-control" />
-                <span asp-validation-for="Employee.Age" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Employee.Gender" class="control-label"></label>
-                <input asp-for="Employee.Gender" class="form-control" />
-                <span asp-validation-for="Employee.Gender" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Employee.DepartmentId" class="control-label"></label>
-                <select asp-for="Employee.DepartmentId" class ="form-control" asp-items="ViewBag.DepartmentId"></select>
-            </div>
-            <div class="form-group">
-                <label asp-for="Employee.ProgrammingLanguageId" class="control-label"></label>
-                <select asp-for="Employee.ProgrammingLanguageId" class ="form-control" asp-items="ViewBag.ProgrammingLanguageId"></select>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
-            </div>
-        </form>
-    </div>
-</div>
-
-<div>
-    <a asp-page="Index">Back to List</a>
-</div>
-
-@section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
-}*@
 <h1>Create new employee</h1>
 
 <hr />
@@ -78,8 +28,8 @@
     <div class="form-group">
         <label asp-for="EmployeeVM.Gender"></label>
         <select asp-for="EmployeeVM.Gender" class="form-control">
-            <option value="M">Male</option>
-            <option value="F">Female</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
         </select>
         <span asp-validation-for="EmployeeVM.Gender" class="text-danger"></span>
     </div>

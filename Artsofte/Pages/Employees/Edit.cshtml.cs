@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -13,9 +9,9 @@ namespace Artsofte.Pages.Employees
 {
     public class EditModel : PageModel
     {
-        private readonly Artsofte.Data.ArtsofteContext _context;
+        private readonly ArtsofteContext _context;
 
-        public EditModel(Artsofte.Data.ArtsofteContext context)
+        public EditModel(ArtsofteContext context)
         {
             _context = context;
         }
@@ -30,50 +26,32 @@ namespace Artsofte.Pages.Employees
                 return NotFound();
             }
 
-            var employee =  await _context.Employees.FirstOrDefaultAsync(m => m.Id == id);
+            var employee = await _context.Employees.FirstOrDefaultAsync(m => m.Id == id);
             if (employee == null)
             {
                 return NotFound();
             }
             Employee = employee;
-           ViewData["DepartmentId"] = new SelectList(_context.Departments, "Id", "Id");
-           ViewData["ProgrammingLanguageId"] = new SelectList(_context.ProgrammingLanguages, "Id", "Id");
+            ViewData["DepartmentId"] = new SelectList(_context.Departments, "Id", "Name");
+            ViewData["ProgrammingLanguageId"] = new SelectList(_context.ProgrammingLanguages, "Id", "Name");
             return Page();
         }
 
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see https://aka.ms/RazorPagesCRUD.
-        public async Task<IActionResult> OnPostAsync()
+        
+        public async Task<IActionResult> OnPostAsync(Employee employee)
         {
-            if (!ModelState.IsValid)
+            if (employee != null)
             {
-                return Page();
-            }
-
-            _context.Attach(Employee).State = EntityState.Modified;
-
-            try
-            {
+                _context.Employees.Update(employee);
                 await _context.SaveChangesAsync();
+                return RedirectToPage("./Index");
             }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!EmployeeExists(Employee.Id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return RedirectToPage("./Index");
+            return Page();
         }
 
         private bool EmployeeExists(int id)
         {
-          return (_context.Employees?.Any(e => e.Id == id)).GetValueOrDefault();
+            return (_context.Employees?.Any(e => e.Id == id)).GetValueOrDefault();
         }
     }
 }
