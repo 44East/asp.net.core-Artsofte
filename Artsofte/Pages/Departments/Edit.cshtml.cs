@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using Artsofte.Data;
 using Artsofte.Models;
 
-namespace Artsofte.Pages
+namespace Artsofte.Pages.Departments
 {
     public class EditModel : PageModel
     {
@@ -21,23 +21,21 @@ namespace Artsofte.Pages
         }
 
         [BindProperty]
-        public Employee Employee { get; set; } = default!;
+        public Department Department { get; set; } = default!;
 
         public async Task<IActionResult> OnGetAsync(int? id)
         {
-            if (id == null || _context.Employees == null)
+            if (id == null || _context.Departments == null)
             {
                 return NotFound();
             }
 
-            var employee =  await _context.Employees.FirstOrDefaultAsync(m => m.Id == id);
-            if (employee == null)
+            var department =  await _context.Departments.FirstOrDefaultAsync(m => m.Id == id);
+            if (department == null)
             {
                 return NotFound();
             }
-            Employee = employee;
-           ViewData["DepartmentId"] = new SelectList(_context.Set<Department>(), "Id", "Id");
-           ViewData["ProgrammingLanguageId"] = new SelectList(_context.Set<ProgrammingLanguage>(), "Id", "Id");
+            Department = department;
             return Page();
         }
 
@@ -50,7 +48,7 @@ namespace Artsofte.Pages
                 return Page();
             }
 
-            _context.Attach(Employee).State = EntityState.Modified;
+            _context.Attach(Department).State = EntityState.Modified;
 
             try
             {
@@ -58,7 +56,7 @@ namespace Artsofte.Pages
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!EmployeeExists(Employee.Id))
+                if (!DepartmentExists(Department.Id))
                 {
                     return NotFound();
                 }
@@ -71,9 +69,9 @@ namespace Artsofte.Pages
             return RedirectToPage("./Index");
         }
 
-        private bool EmployeeExists(int id)
+        private bool DepartmentExists(int id)
         {
-          return (_context.Employees?.Any(e => e.Id == id)).GetValueOrDefault();
+          return (_context.Departments?.Any(e => e.Id == id)).GetValueOrDefault();
         }
     }
 }

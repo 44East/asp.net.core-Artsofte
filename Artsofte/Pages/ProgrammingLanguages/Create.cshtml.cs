@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Artsofte.Data;
 using Artsofte.Models;
 
-namespace Artsofte.Pages
+namespace Artsofte.Pages.ProgrammingLanguages
 {
     public class CreateModel : PageModel
     {
@@ -21,24 +21,22 @@ namespace Artsofte.Pages
 
         public IActionResult OnGet()
         {
-        ViewData["DepartmentId"] = new SelectList(_context.Set<Department>(), "Id", "Id");
-        ViewData["ProgrammingLanguageId"] = new SelectList(_context.Set<ProgrammingLanguage>(), "Id", "Id");
             return Page();
         }
 
         [BindProperty]
-        public Employee Employee { get; set; } = default!;
+        public ProgrammingLanguage ProgrammingLanguage { get; set; } = default!;
         
 
         // To protect from overposting attacks, see https://aka.ms/RazorPagesCRUD
         public async Task<IActionResult> OnPostAsync()
         {
-          if (!ModelState.IsValid || _context.Employees == null || Employee == null)
+          if (!ModelState.IsValid || _context.ProgrammingLanguages == null || ProgrammingLanguage == null)
             {
                 return Page();
             }
 
-            _context.Employees.Add(Employee);
+            _context.ProgrammingLanguages.Add(ProgrammingLanguage);
             await _context.SaveChangesAsync();
 
             return RedirectToPage("./Index");

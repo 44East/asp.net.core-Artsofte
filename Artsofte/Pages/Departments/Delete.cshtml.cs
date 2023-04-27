@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Artsofte.Data;
 using Artsofte.Models;
 
-namespace Artsofte.Pages
+namespace Artsofte.Pages.Departments
 {
     public class DeleteModel : PageModel
     {
@@ -20,40 +20,40 @@ namespace Artsofte.Pages
         }
 
         [BindProperty]
-      public Employee Employee { get; set; } = default!;
+      public Department Department { get; set; } = default!;
 
         public async Task<IActionResult> OnGetAsync(int? id)
         {
-            if (id == null || _context.Employees == null)
+            if (id == null || _context.Departments == null)
             {
                 return NotFound();
             }
 
-            var employee = await _context.Employees.FirstOrDefaultAsync(m => m.Id == id);
+            var department = await _context.Departments.FirstOrDefaultAsync(m => m.Id == id);
 
-            if (employee == null)
+            if (department == null)
             {
                 return NotFound();
             }
             else 
             {
-                Employee = employee;
+                Department = department;
             }
             return Page();
         }
 
         public async Task<IActionResult> OnPostAsync(int? id)
         {
-            if (id == null || _context.Employees == null)
+            if (id == null || _context.Departments == null)
             {
                 return NotFound();
             }
-            var employee = await _context.Employees.FindAsync(id);
+            var department = await _context.Departments.FindAsync(id);
 
-            if (employee != null)
+            if (department != null)
             {
-                Employee = employee;
-                _context.Employees.Remove(Employee);
+                Department = department;
+                _context.Departments.Remove(Department);
                 await _context.SaveChangesAsync();
             }
 

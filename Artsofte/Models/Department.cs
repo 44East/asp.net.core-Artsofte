@@ -8,7 +8,7 @@ namespace Artsofte.Models
         public int Id { get; set; }
         public string Name { get; set; }
         public string Floor { get; set; }
-        public ICollection<Enrollment> Enrollments { get; set; }
+        public ICollection<Employee> Employees { get; set; }
 
     }
 }

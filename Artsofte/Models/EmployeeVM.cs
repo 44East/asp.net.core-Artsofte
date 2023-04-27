@@ -1,11 +1,8 @@
 ﻿
 
-
-using System.ComponentModel.DataAnnotations.Schema;
-
 namespace Artsofte.Models
 {
-    public class Employee
+    public class EmployeeVM
     {
         public int Id { get; set; }
         public string Name { get; set; }
@@ -13,13 +10,9 @@ namespace Artsofte.Models
         public int Age { get; set; }
         public string Gender { get; set; }
 
-        [ForeignKey("Depatments ")]
+       
         public int DepartmentId { get; set; }
-
-        public Department Department { get; set; }
-        [ForeignKey("ProgrammingLanguages ")]
+     
         public int ProgrammingLanguageId { get; set; }
-        public ProgrammingLanguage ProgrammingLanguage { get; set; }
-
     }
 }

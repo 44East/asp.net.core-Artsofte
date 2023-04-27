@@ -40,14 +40,7 @@ namespace Artsofte.Data
             context.Employees.AddRange(employees);
             context.SaveChanges();
 
-            var enrollments = new Enrollment[]
-            {
-                new Enrollment { Employee = employees[0], Department = departments[0], ProgrammingLanguage = programmingLanguages[0] },
-                new Enrollment { Employee = employees[1], Department = departments[1], ProgrammingLanguage = programmingLanguages[1] },
-                new Enrollment { Employee = employees[2], Department = departments[2], ProgrammingLanguage = programmingLanguages[2] },
-            };
-            context.Enrollments.AddRange(enrollments);
-            context.SaveChanges();
+            
 
 
         }

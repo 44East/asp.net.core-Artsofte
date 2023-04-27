@@ -1,5 +1,5 @@
 ﻿@page
-@model Artsofte.Pages.DetailsModel
+@model Artsofte.Pages.Employees.DetailsModel
 
 @{
     ViewData["Title"] = "Details";
@@ -35,17 +35,23 @@
         <dd class="col-sm-10">
             @Html.DisplayFor(model => model.Employee.Gender)
         </dd>
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Employee.Department)
-        </dt>
         <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Employee.Department.Id)
-        </dd>
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Employee.ProgrammingLanguage)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Employee.ProgrammingLanguage.Id)
+            <table class="table">
+                <tr>
+                    <th>Department</th>
+                    <th>Programming Language</th>
+                </tr>
+                
+                    <tr>
+                        <td>
+                        @Html.DisplayFor(model => model.Employee.Department.Name)
+                        </td>
+                        <td>
+                        @Html.DisplayFor(model => model.Employee.ProgrammingLanguage.Name)
+                        </td>
+                    </tr>
+                
+            </table>
         </dd>
     </dl>
 </div>

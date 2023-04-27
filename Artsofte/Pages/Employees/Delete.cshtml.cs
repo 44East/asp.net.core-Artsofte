@@ -8,18 +8,19 @@ using Microsoft.EntityFrameworkCore;
 using Artsofte.Data;
 using Artsofte.Models;
 
-namespace Artsofte.Pages
+namespace Artsofte.Pages.Employees
 {
-    public class DetailsModel : PageModel
+    public class DeleteModel : PageModel
     {
         private readonly Artsofte.Data.ArtsofteContext _context;
 
-        public DetailsModel(Artsofte.Data.ArtsofteContext context)
+        public DeleteModel(Artsofte.Data.ArtsofteContext context)
         {
             _context = context;
         }
 
-      public Employee Employee { get; set; } = default!; 
+        [BindProperty]
+      public Employee Employee { get; set; } = default!;
 
         public async Task<IActionResult> OnGetAsync(int? id)
         {
@@ -29,6 +30,7 @@ namespace Artsofte.Pages
             }
 
             var employee = await _context.Employees.FirstOrDefaultAsync(m => m.Id == id);
+
             if (employee == null)
             {
                 return NotFound();
@@ -38,6 +40,24 @@ namespace Artsofte.Pages
                 Employee = employee;
             }
             return Page();
+        }
+
+        public async Task<IActionResult> OnPostAsync(int? id)
+        {
+            if (id == null || _context.Employees == null)
+            {
+                return NotFound();
+            }
+            var employee = await _context.Employees.FindAsync(id);
+
+            if (employee != null)
+            {
+                Employee = employee;
+                _context.Employees.Remove(Employee);
+                await _context.SaveChangesAsync();
+            }
+
+            return RedirectToPage("./Index");
         }
     }
 }
