@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Artsofte.Data;
 using Artsofte.Models;
@@ -13,9 +8,9 @@ namespace Artsofte.Pages.Departments
 {
     public class EditModel : PageModel
     {
-        private readonly Artsofte.Data.ArtsofteContext _context;
+        private readonly ArtsofteContext _context;
 
-        public EditModel(Artsofte.Data.ArtsofteContext context)
+        public EditModel(ArtsofteContext context)
         {
             _context = context;
         }
@@ -41,37 +36,16 @@ namespace Artsofte.Pages.Departments
 
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see https://aka.ms/RazorPagesCRUD.
-        public async Task<IActionResult> OnPostAsync()
+        public async Task<IActionResult> OnPostAsync(Department department)
         {
-            if (!ModelState.IsValid)
+            if (department != null)
             {
-                return Page();
-            }
-
-            _context.Attach(Department).State = EntityState.Modified;
-
-            try
-            {
+                _context.Departments.Update(department);
                 await _context.SaveChangesAsync();
+                return RedirectToPage("./Index");
             }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!DepartmentExists(Department.Id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return RedirectToPage("./Index");
+            return Page();
         }
 
-        private bool DepartmentExists(int id)
-        {
-          return (_context.Departments?.Any(e => e.Id == id)).GetValueOrDefault();
-        }
     }
 }

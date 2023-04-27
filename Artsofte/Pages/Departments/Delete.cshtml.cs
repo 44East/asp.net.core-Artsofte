@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Artsofte.Data;
@@ -12,9 +8,9 @@ namespace Artsofte.Pages.Departments
 {
     public class DeleteModel : PageModel
     {
-        private readonly Artsofte.Data.ArtsofteContext _context;
+        private readonly ArtsofteContext _context;
 
-        public DeleteModel(Artsofte.Data.ArtsofteContext context)
+        public DeleteModel(ArtsofteContext context)
         {
             _context = context;
         }
