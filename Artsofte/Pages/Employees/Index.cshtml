@@ -14,21 +14,27 @@
     <thead>
         <tr>
             <th>
+                <a asp-action="Index" asp-route-sortOrder="@ViewBag.NameSort" />
                 @Html.DisplayNameFor(model => model.Employee[0].Name)
             </th>
             <th>
+                <a asp-action="Index" asp-route-sortOrder="@ViewBag.SurnameSort"/>
                 @Html.DisplayNameFor(model => model.Employee[0].Surname)
             </th>
             <th>
+                <a asp-action="Index" asp-route-sortOrder="@ViewBag.AgeSort" />
                 @Html.DisplayNameFor(model => model.Employee[0].Age)
             </th>
             <th>
+                <a asp-action="Index" asp-route-sortOrder="@ViewBag.GenderSort" />
                 @Html.DisplayNameFor(model => model.Employee[0].Gender)
             </th>
             <th>
+                <a asp-action="Index" asp-route-sortOrder="@ViewBag.DepartmentSort" />
                 @Html.DisplayNameFor(model => model.Employee[0].Department)
             </th>
             <th>
+                <a asp-action="Index" asp-route-sortOrder="@ViewBag.ProgrammingLanguageSort" />
                 @Html.DisplayNameFor(model => model.Employee[0].ProgrammingLanguage)
             </th>
             <th></th>
