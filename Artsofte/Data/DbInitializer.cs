@@ -2,6 +2,9 @@
 
 namespace Artsofte.Data
 {
+    /// <summary>
+    /// This static class for filling DB the testing data
+    /// </summary>
     public class DbInitializer
     {
         public static void Initialize(ArtsofteContext context)
