@@ -15,33 +15,33 @@
         <tr>
             <th>
                 <a asp-action="Index" asp-route-sortOrder="@ViewBag.NameSort" />
-                @Html.DisplayNameFor(model => model.Employee[0].Name)
+                @Html.DisplayNameFor(model => model.Employees[0].Name)
             </th>
             <th>
                 <a asp-action="Index" asp-route-sortOrder="@ViewBag.SurnameSort"/>
-                @Html.DisplayNameFor(model => model.Employee[0].Surname)
+                @Html.DisplayNameFor(model => model.Employees[0].Surname)
             </th>
             <th>
                 <a asp-action="Index" asp-route-sortOrder="@ViewBag.AgeSort" />
-                @Html.DisplayNameFor(model => model.Employee[0].Age)
+                @Html.DisplayNameFor(model => model.Employees[0].Age)
             </th>
             <th>
                 <a asp-action="Index" asp-route-sortOrder="@ViewBag.GenderSort" />
-                @Html.DisplayNameFor(model => model.Employee[0].Gender)
+                @Html.DisplayNameFor(model => model.Employees[0].Gender)
             </th>
             <th>
                 <a asp-action="Index" asp-route-sortOrder="@ViewBag.DepartmentSort" />
-                @Html.DisplayNameFor(model => model.Employee[0].Department)
+                @Html.DisplayNameFor(model => model.Employees[0].Department)
             </th>
             <th>
                 <a asp-action="Index" asp-route-sortOrder="@ViewBag.ProgrammingLanguageSort" />
-                @Html.DisplayNameFor(model => model.Employee[0].ProgrammingLanguage)
+                @Html.DisplayNameFor(model => model.Employees[0].ProgrammingLanguage)
             </th>
             <th></th>
         </tr>
     </thead>
     <tbody>
-@foreach (var item in Model.Employee) {
+@foreach (var item in Model.Employees) {
         <tr>
             <td>
                 @Html.DisplayFor(modelItem => item.Name)

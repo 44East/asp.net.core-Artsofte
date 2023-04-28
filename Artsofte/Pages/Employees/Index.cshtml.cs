@@ -25,7 +25,7 @@ namespace Artsofte.Pages.Employees
         /// <summary>
         /// The list of <see cref="Models.Employee"/> to display on the index page.
         /// </summary>
-        public IList<Employee> Employee { get; set; }
+        public IList<Employee> Employees { get; set; }
 
         /// <summary>
         /// Retrieves a list of <see cref="Models.Employee"/> from the database and sorts them based on the specified <see cref="EmployeeSortState"/> states.
@@ -37,7 +37,7 @@ namespace Artsofte.Pages.Employees
             if (_context.Employees == null)
             {
                 // If there are no Employees in the database, initialize an empty list and return.
-                Employee = new List<Employee>();
+                Employees = new List<Employee>();
                 return;
             }
             // Create an IQueryable object for the Employees in the database, including related entities.
@@ -72,8 +72,8 @@ namespace Artsofte.Pages.Employees
                 _ => employeesIQ.OrderBy(e => e.Surname)
             };
 
-            // Bind the sorted data to the Employee property, with AsNoTracking() to improve performance.
-            Employee = await employeesIQ.AsNoTracking().ToListAsync();
+            // Bind the sorted data to the Employees property, with AsNoTracking() to improve performance.
+            Employees = await employeesIQ.AsNoTracking().ToListAsync();
 
 
         }
