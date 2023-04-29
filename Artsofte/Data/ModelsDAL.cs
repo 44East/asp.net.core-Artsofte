@@ -16,19 +16,20 @@ namespace Artsofte.Data
         private SqlConnection _sqlConnection = null;
         private bool _dbDataExists;
 
-        public IQueryable<Employee> Employees { get; set; }
-        public IQueryable<Department> Departments { get; set; }
-        public IQueryable<ProgrammingLanguage> ProgrammingLanguages { get; set; }
-        public ModelsDAL()
+        public IEnumerable<Employee> Employees { get; set; }
+        public IEnumerable<Department> Departments { get; set; }
+        public IEnumerable<ProgrammingLanguage> ProgrammingLanguages { get; set; }
+
+        public bool IsDBExist { get; set; }
+
+        private static Lazy<ModelsDAL> instance = new Lazy<ModelsDAL>(() => new ModelsDAL());
+
+        public static ModelsDAL Instance => instance.Value;
+        private ModelsDAL()
         {
-            _connectionString = $@"Server=(localdb)\mssqllocaldb;Database=Artsofte.Data;Trusted_Connection=True;MultipleActiveResultSets=true";
-            _pathToSqlQueries = Path.Combine(Environment.CurrentDirectory, "sql_queries");
-            _dbDataExists = IsTheLocalDBExistsAsync();
-            if (!_dbDataExists)//If the DB doesn't exist, will be create a new test DB with the test data.
-                CreationDB().RunSynchronously();
-            Employees = GetAllEmployeesData().Result.AsQueryable();
-
-
+            _connectionString = $@"Server=(localdb)\mssqllocaldb;Database=master;Trusted_Connection=True;MultipleActiveResultSets=true";
+            _pathToSqlQueries = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "sql_queries");
+            IsDBExist = false;
         }
         /// <summary>
         /// Connect to the MSSQL DB
@@ -78,6 +79,31 @@ namespace Artsofte.Data
         //All methods (below) for CRUD processes use the ADO.NET technology
         #region CRUD Operations
 
+        public async Task CheckDataBaseStatus()
+        {
+            if (await IsTheLocalDBExistsAsync())
+            {
+                Employees = await GetAllEmployeesData();
+                Departments = await GetDepartmentsData();
+                ProgrammingLanguages = await GetProgrammingLanguagesData();
+                IsDBExist = true;
+                return;
+            }
+            else
+            {
+                try
+                {
+                    await CreationDB();
+                    await FillDataBase();
+                    IsDBExist = true;
+                }
+                catch
+                {
+                    throw;
+                }
+            }
+        }
+
         /// <summary>
         /// Checks the localhost MSSQL Server DB for an availability saved database [ToDoList]
         /// It sends query to the DB for receiving an Id number of one the tables from the DB.
@@ -87,7 +113,7 @@ namespace Artsofte.Data
         {
             await OpenConnectionAsync();
             var isDBExists = false;
-            var sql = $@"SELECT OBJECT_ID (N'ToDoList.dbo.Persons', N'U') AS 'ID'";
+            var sql = @File.ReadAllText(Path.Combine(_pathToSqlQueries, "CheckDBForExisting.sql"), Encoding.GetEncoding(1251));
             using (SqlCommand command = new SqlCommand(sql, _sqlConnection))
             {
                 command.CommandType = CommandType.Text;
@@ -111,6 +137,11 @@ namespace Artsofte.Data
         private async Task CreationDB()
         {
             var queriesStack = new Stack<string>();
+            queriesStack.Push(@File.ReadAllText(Path.Combine(_pathToSqlQueries, "CreateEmployeeTable.sql"), Encoding.GetEncoding(1251)));
+            queriesStack.Push(@File.ReadAllText(Path.Combine(_pathToSqlQueries, "CreateDepartmentsTable.sql"), Encoding.GetEncoding(1251)));
+            queriesStack.Push(@File.ReadAllText(Path.Combine(_pathToSqlQueries, "CreateProgrammingLanguagesTable.sql"), Encoding.GetEncoding(1251)));
+            queriesStack.Push(@File.ReadAllText(Path.Combine(_pathToSqlQueries, "ArtsofteCreationDB.sql"), Encoding.GetEncoding(1251)));
+
 
             await OpenConnectionAsync();
             do
@@ -124,8 +155,36 @@ namespace Artsofte.Data
                     }
                     catch (SqlException ex)
                     {
-                        Exception error = new Exception("LocalBD cann't fill!", ex);
-                        throw error;
+                        await Console.Out.WriteLineAsync(ex.Message);
+                        throw;
+                    }
+                }
+            } while (queriesStack.Count > 0);
+            await CloseConnectionAsync();
+        }
+
+        private async Task FillDataBase()
+        {
+            var queriesStack = new Stack<string>();
+            queriesStack.Push(@File.ReadAllText(Path.Combine(_pathToSqlQueries, "AddTestEmployees.sql"), Encoding.GetEncoding(1251)));
+            queriesStack.Push(@File.ReadAllText(Path.Combine(_pathToSqlQueries, "AddTestDepartments.sql"), Encoding.GetEncoding(1251)));
+            queriesStack.Push(@File.ReadAllText(Path.Combine(_pathToSqlQueries, "AddTestLanguages.sql"), Encoding.GetEncoding(1251)));
+
+
+            await OpenConnectionAsync();
+            do
+            {
+                using (SqlCommand command = new SqlCommand(queriesStack.Pop(), _sqlConnection))
+                {
+                    try
+                    {
+                        command.CommandType = CommandType.Text;
+                        command.ExecuteNonQuery();
+                    }
+                    catch (SqlException ex)
+                    {
+                        await Console.Out.WriteLineAsync(ex.Message);
+                        throw;
                     }
                 }
             } while (queriesStack.Count > 0);
@@ -188,11 +247,11 @@ namespace Artsofte.Data
                     while (reader.Read())
                     {
                         departmentsList.Add(new Department()
-                        { 
+                        {
                             Id = (int)reader["ID"],
                             Name = (string)reader["Name"],
                             Floor = (string)reader["Floor"]
-                        
+
                         });
                     }
                 }
@@ -393,37 +452,7 @@ namespace Artsofte.Data
             await CloseConnectionAsync();
         }
 
-        /// <summary>
-        /// Update the exist ToDoTask into DB, It updates only a [Description] field
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="description"></param>
-        /// <param name="taskName"></param>
-        /// <param name="firstName"></param>
-        /// <param name="lastName"></param>
-        public void UpdateTask(int id, string description, string taskName, string firstName, string lastName)
-        {
-            OpenConnectionAsync();
-            if (_sqlConnection == null)
-                return;
-            var sql = $@"USE ToDoList DECLARE @PersonID INT
-                         SELECT @PersonID = i.ID FROM Persons i WHERE i.First_Name = N'{firstName}' and i.Last_Name = N'{lastName}'
-                         UPDATE Tasks SET Description = N'{description}', Assigned_Person = @PersonID, Name = N'{taskName}'  WHERE ID = {id}";
-            using (SqlCommand command = new SqlCommand(sql, _sqlConnection))
-            {
-                try
-                {
-                    command.CommandType = CommandType.Text;
-                    command.ExecuteNonQuery();
-                }
-                catch (SqlException ex)
-                {
-                    Exception error = new Exception("The operation couldn’t be completed!", ex);
-                    throw error;
-                }
-            }
-            CloseConnectionAsync();
-        }
+
 
         public async Task UpdateEmployee(Employee employee)
         {
@@ -431,8 +460,9 @@ namespace Artsofte.Data
             if (_sqlConnection == null)
                 return;
             var sql = @File.ReadAllText(Path.Combine(_pathToSqlQueries, "UpdateEmployee.sql"), Encoding.GetEncoding(1251));
-            var values = $@" (Name = N'{employee.Name}', Surname = N'{employee.Surname}', Age = {employee.Age}, Gender = N'{employee.Gender}', DepartmentId = {employee.DepartmentId}, ProgrammingLanguage = {employee.ProgrammingLanguageId})";
-            using (SqlCommand command = new SqlCommand(sql + values, _sqlConnection))
+            var values = $@" Name = N'{employee.Name}', Surname = N'{employee.Surname}', Age = {employee.Age}, Gender = N'{employee.Gender}', DepartmentId = {employee.DepartmentId}, ProgrammingLanguageId = {employee.ProgrammingLanguageId}";
+            var fullQuery = string.Format(sql, values, employee.Id);
+            using (SqlCommand command = new SqlCommand(fullQuery, _sqlConnection))
             {
                 SqlTransaction transaction = null;
                 try
@@ -456,14 +486,15 @@ namespace Artsofte.Data
         /// Add NEW Person in the Person table into DB
         /// </summary>
         /// <param name="person"></param>
-        public async Task InsertDepartment(DepartmentVM department)
+        public async Task UpdateDepartment(Department department)
         {
             await OpenConnectionAsync();
             if (_sqlConnection == null)
                 return;
-            var sql = @File.ReadAllText(Path.Combine(_pathToSqlQueries, "InsertDepartment.sql"), Encoding.GetEncoding(1251));
-            var values = $@" (N'{department.Name}', N'{department.Floor}')";
-            using (SqlCommand command = new SqlCommand(sql + values, _sqlConnection))
+            var sql = @File.ReadAllText(Path.Combine(_pathToSqlQueries, "UpdateDepartment.sql"), Encoding.GetEncoding(1251));
+            var values = $@" Name = N'{department.Name}', Floor =  N'{department.Floor}'";
+            var fullQuery = string.Format(sql, values, department.Id);
+            using (SqlCommand command = new SqlCommand(fullQuery, _sqlConnection))
             {
                 SqlTransaction transaction = null;
                 try
@@ -484,14 +515,15 @@ namespace Artsofte.Data
             await CloseConnectionAsync();
         }
 
-        public async Task InsertProgrammingLanguages(ProgrammingLanguageVM languageVM)
+        public async Task UpdateProgrammingLanguages(ProgrammingLanguage language)
         {
             await OpenConnectionAsync();
             if (_sqlConnection == null)
                 return;
             var sql = @File.ReadAllText(Path.Combine(_pathToSqlQueries, "InsertProgrammingLanguage.sql"), Encoding.GetEncoding(1251));
-            var values = $@" (N'{languageVM.Name}')";
-            using (SqlCommand command = new SqlCommand(sql + values, _sqlConnection))
+            var values = $@" Name = N'{language.Name}'";
+            var fullQuery = string.Format(sql, values, language.Id);
+            using (SqlCommand command = new SqlCommand(fullQuery, _sqlConnection))
             {
                 SqlTransaction transaction = null;
                 try

@@ -13,13 +13,14 @@ namespace Artsofte.Pages.Employees
     public class EditModel : PageModel
     {
         private readonly ArtsofteContext _context;
+        private readonly ModelsDAL _models;
         /// <summary>
         /// Creates a new instance of the <see cref="EditModel"/> class.
         /// </summary>
         /// <param name="context">The database context <see cref="ArtsofteContext"/>  for this page.</param>
-        public EditModel(ArtsofteContext context)
+        public EditModel(ModelsDAL models)
         {
-            _context = context;
+            _models = models;
         }
         
         /// <summary>
@@ -35,19 +36,20 @@ namespace Artsofte.Pages.Employees
         /// <returns>The result of the GET request.</returns>
         public async Task<IActionResult> OnGetAsync(int? id)
         {
-            if (id == null || _context.Employees == null)
+            if (id == null || !_models.IsDBExist)
             {
                 return NotFound();
             }
 
-            var employee = await _context.Employees.FirstOrDefaultAsync(m => m.Id == id);
+            var employee =  _models.Employees.FirstOrDefault(m => m.Id == id);
+            var employee1 = (await _models.GetAllEmployeesData()).FirstOrDefault(m => m.Id == id);
             if (employee == null)
             {
                 return NotFound();
             }
             Employee = employee;
-            ViewData["DepartmentId"] = new SelectList(_context.Departments, "Id", "Name");
-            ViewData["ProgrammingLanguageId"] = new SelectList(_context.ProgrammingLanguages, "Id", "Name");
+            ViewData["DepartmentId"] = new SelectList(_models.Departments, "Id", "Name");
+            ViewData["ProgrammingLanguageId"] = new SelectList(_models.ProgrammingLanguages, "Id", "Name");
             return Page();
         }
 
@@ -60,8 +62,7 @@ namespace Artsofte.Pages.Employees
         {
             if (employee != null)
             {
-                _context.Employees.Update(employee);
-                await _context.SaveChangesAsync();
+                await _models.UpdateEmployee(employee);                
                 return RedirectToPage("./Index");
             }
             return Page();

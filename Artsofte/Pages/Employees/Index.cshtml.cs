@@ -11,15 +11,15 @@ namespace Artsofte.Pages.Employees
     /// </summary>
     public class IndexModel : PageModel
     {
-        private readonly ArtsofteContext _context;
+        private readonly ModelsDAL _models;
 
         /// <summary>
         /// Creates a new instance of the <see cref="IndexModel"/> class.
         /// </summary>
-        /// <param name="context">The database context <see cref="ArtsofteContext"/>  for this page.</param>
-        public IndexModel(ArtsofteContext context)
+        /// <param name="models">The database context <see cref="ModelsDAL"/>  for this page.</param>
+        public IndexModel(ModelsDAL models)
         {
-            _context = context;
+            _models = models;
         }
 
         /// <summary>
@@ -34,16 +34,14 @@ namespace Artsofte.Pages.Employees
         /// <returns>A task that represents the asynchronous operation of retrieving and sorting employees.</returns>
         public async Task OnGetAsync(EmployeeSortState sortOrder = EmployeeSortState.SurnameAsc)
         {
-            if (_context.Employees == null)
+            if (_models == null && !_models.IsDBExist)
             {
                 // If there are no Employees in the database, initialize an empty list and return.
                 Employees = new List<Employee>();
                 return;
             }
-            // Create an IQueryable object for the Employees in the database, including related entities.
-            IQueryable<Employee> employeesIQ = _context.Employees
-                .Include(e => e.Department)
-                .Include(e => e.ProgrammingLanguage);
+            // Create an IEnumerable object for the Employees in the database.
+            IEnumerable<Employee> employees = _models.Employees;
 
             // Set up ViewData for the sort order. These values will be used in the Razor view to create links to sort the data.
             ViewData["NameSort"] = sortOrder == EmployeeSortState.NameAsc ? EmployeeSortState.NameDesc : EmployeeSortState.NameAsc;
@@ -56,24 +54,24 @@ namespace Artsofte.Pages.Employees
             // Sort the Employees based on the sortOrder parameter by EmployeeSortState.
             // The switch statement selects the appropriate LINQ method based on the sortOrder value.
             // If an invalid value is passed, the default case sorts by Surname.
-            employeesIQ = sortOrder switch
+            employees = sortOrder switch
             {
-                EmployeeSortState.NameAsc => employeesIQ.OrderBy(e => e.Name),
-                EmployeeSortState.NameDesc => employeesIQ.OrderByDescending(e => e.Name),
-                EmployeeSortState.SurnameDesc => employeesIQ.OrderByDescending(e => e.Surname),
-                EmployeeSortState.AgeAsc => employeesIQ.OrderBy(e => e.Age),
-                EmployeeSortState.AgeDesc => employeesIQ?.OrderByDescending(e => e.Age),
-                EmployeeSortState.GenderAsc => employeesIQ.OrderBy(e => e.Gender),
-                EmployeeSortState.GenderDesc => employeesIQ.OrderByDescending(e => e.Gender),
-                EmployeeSortState.DepartmentAsc => employeesIQ.OrderBy(e => e.Department.Name),
-                EmployeeSortState.DepartmentDesc => employeesIQ.OrderByDescending(e => e.Department.Name),
-                EmployeeSortState.ProgLangAsc => employeesIQ.OrderBy(e => e.ProgrammingLanguage.Name),
-                EmployeeSortState.ProgLangDesc => employeesIQ.OrderByDescending(e => e.ProgrammingLanguage.Name),
-                _ => employeesIQ.OrderBy(e => e.Surname)
+                EmployeeSortState.NameAsc => employees.OrderBy(e => e.Name),
+                EmployeeSortState.NameDesc => employees.OrderByDescending(e => e.Name),
+                EmployeeSortState.SurnameDesc => employees.OrderByDescending(e => e.Surname),
+                EmployeeSortState.AgeAsc => employees.OrderBy(e => e.Age),
+                EmployeeSortState.AgeDesc => employees?.OrderByDescending(e => e.Age),
+                EmployeeSortState.GenderAsc => employees.OrderBy(e => e.Gender),
+                EmployeeSortState.GenderDesc => employees.OrderByDescending(e => e.Gender),
+                EmployeeSortState.DepartmentAsc => employees.OrderBy(e => e.Department.Name),
+                EmployeeSortState.DepartmentDesc => employees.OrderByDescending(e => e.Department.Name),
+                EmployeeSortState.ProgLangAsc => employees.OrderBy(e => e.ProgrammingLanguage.Name),
+                EmployeeSortState.ProgLangDesc => employees.OrderByDescending(e => e.ProgrammingLanguage.Name),
+                _ => employees.OrderBy(e => e.Surname)
             };
 
-            // Bind the sorted data to the Employees property, with AsNoTracking() to improve performance.
-            Employees = await employeesIQ.AsNoTracking().ToListAsync();
+            // Bind the sorted data to the Employees property.
+            Employees = employees.ToList();           
 
 
         }
