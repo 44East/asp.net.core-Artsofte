@@ -12,33 +12,34 @@ namespace Artsofte.Pages.Departments
     public class EditModel : PageModel
     {
         private readonly ArtsofteContext _context;
+        private readonly ModelsDAL _models;
         /// <summary>
         /// Creates a new instance of the <see cref="EditModel"/> class.
         /// </summary>
-        /// <param name="context">The database context <see cref="ArtsofteContext"/>  for this page.</param>
-        public EditModel(ArtsofteContext context)
+        /// <param name="models">The database context <see cref="ModelsDAL"/>  for this page.</param>
+        public EditModel(ModelsDAL models)
         {
-            _context = context;
+            _models = models;
         }
 
         /// <summary>
         /// Property that binds to the <see cref="Models.Department"/> model.
         /// </summary>
         [BindProperty]
-        public Department Department { get; set; } = default!;
+        public Department Department { get; set; } 
         /// <summary>
         /// Handles the GET request for editing a selected <see cref="Models.Department"/> object.
         /// </summary>
         /// <param name="id">The Id of the <see cref="Models.Department"/> to edit.</param>
         /// <returns>The result of the GET request.</returns>
-        public async Task<IActionResult> OnGetAsync(int? id)
+        public IActionResult OnGet(int? id)
         {
-            if (id == null || _context.Departments == null)
+            if (id == null || _models.Departments == null)
             {
                 return NotFound();
             }
 
-            var department =  await _context.Departments.FirstOrDefaultAsync(m => m.Id == id);
+            var department =  _models.Departments.FirstOrDefault(m => m.Id == id);
             if (department == null)
             {
                 return NotFound();
@@ -56,8 +57,7 @@ namespace Artsofte.Pages.Departments
         {
             if (department != null)
             {
-                _context.Departments.Update(department);
-                await _context.SaveChangesAsync();
+                await _models.UpdateDepartmentAsync(department);
                 return RedirectToPage("./Index");
             }
             return Page();

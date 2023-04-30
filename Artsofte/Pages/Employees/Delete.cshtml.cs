@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Artsofte.Data;
 using Artsofte.Models;
+using NuGet.Versioning;
 
 namespace Artsofte.Pages.Employees
 {
@@ -12,14 +13,14 @@ namespace Artsofte.Pages.Employees
     public class DeleteModel : PageModel
     {
         private readonly ArtsofteContext _context;
-
+        private readonly ModelsDAL _models;
         /// <summary>
         /// Initializes a new instance of the <see cref="DeleteModel"/> class.
         /// </summary>
-        /// <param name="context">The <see cref="ArtsofteContext"/> context.</param>
-        public DeleteModel(ArtsofteContext context)
+        /// <param name="models">The <see cref="ModelsDAL"/> context.</param>
+        public DeleteModel( ModelsDAL models)
         {
-            _context = context;
+            _models = models;
         }
 
         /// <summary>
@@ -33,14 +34,14 @@ namespace Artsofte.Pages.Employees
         /// </summary>
         /// <param name="id">This parameter represents the ID of the <see cref="Models.Employee"/> object that needs to be deleted..</param>
         /// <returns>The result of the GET request.</returns>
-        public async Task<IActionResult> OnGetAsync(int? id)
+        public IActionResult OnGet(int? id)
         {
-            if (id == null || _context.Employees == null)
+            if (id == null || _models.Employees == null)
             {
                 return NotFound();
             }
 
-            var employee = await _context.Employees.FirstOrDefaultAsync(m => m.Id == id);
+            var employee = _models.Employees.FirstOrDefault(m => m.Id == id);
 
             if (employee == null)
             {
@@ -60,17 +61,17 @@ namespace Artsofte.Pages.Employees
         /// <returns>The result of the POST request.</returns>
         public async Task<IActionResult> OnPostAsync(int? id)
         {
-            if (id == null || _context.Employees == null)
+            if (id == null || _models.Employees == null)
             {
                 return NotFound();
             }
-            var employee = await _context.Employees.FindAsync(id);
+            //Casting an IEnumerable to a List collection and find the necessery Employee
+            var employee = _models.Employees.ToList().Find(e => e.Id == id);
 
             if (employee != null)
             {
                 Employee = employee;
-                _context.Employees.Remove(Employee);
-                await _context.SaveChangesAsync();
+                await _models.DeleteEmployeeAsync(employee);
             }
 
             return RedirectToPage("./Index");

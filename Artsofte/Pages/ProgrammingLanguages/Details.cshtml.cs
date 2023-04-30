@@ -11,33 +11,33 @@ namespace Artsofte.Pages.ProgrammingLanguages
     /// </summary>
     public class DetailsModel : PageModel
     {
-        private readonly ArtsofteContext _context;
+        private readonly ModelsDAL _models;
         /// <summary>
         /// Creates a new instance of the <see cref="DetailsModel"/> class.
         /// </summary>
-        /// <param name="context">The database context <see cref="ArtsofteContext"/>  for this page.</param>
-        public DetailsModel(ArtsofteContext context)
+        /// <param name="models">The database context <see cref="ModelsDAL"/>  for this page.</param>
+        public DetailsModel(ModelsDAL models)
         {
-            _context = context;
+            _models = models;
         }
         /// <summary>
         /// Property that binds to the <see cref="Models.ProgrammingLanguage"/> model.
         /// </summary>
-        public ProgrammingLanguage ProgrammingLanguage { get; set; } = default!;
+        public ProgrammingLanguage ProgrammingLanguage { get; set; }
         
         /// <summary>
         /// Handles the HTTP GET request for displaying the details of a current <see cref="Models.ProgrammingLanguage"/> object.
         /// </summary>
         /// <param name="id">The ID of the <see cref="Models.ProgrammingLanguage"/> to display.</param>
         /// <returns>The result of the HTTP GET request.</returns>
-        public async Task<IActionResult> OnGetAsync(int? id)
+        public IActionResult OnGet(int? id)
         {
-            if (id == null || _context.ProgrammingLanguages == null)
+            if (id == null || _models.ProgrammingLanguages == null)
             {
                 return NotFound();
             }
 
-            var programminglanguage = await _context.ProgrammingLanguages.FirstOrDefaultAsync(m => m.Id == id);
+            var programminglanguage = _models.ProgrammingLanguages.FirstOrDefault(m => m.Id == id);
             if (programminglanguage == null)
             {
                 return NotFound();

@@ -12,15 +12,14 @@ namespace Artsofte.Pages.Employees
     /// </summary>
     public class CreateModel : PageModel
     {
-        private readonly ArtsofteContext _context;
-
+        private readonly ModelsDAL _models;
         /// <summary>
         /// Creates a new instance of the <see cref="CreateModel"/> class.
         /// </summary>
-        /// <param name="context">The database context <see cref="ArtsofteContext"/>  for this page.</param>
-        public CreateModel(ArtsofteContext context)
+        /// <param name="models">The database context <see cref="ModelsDAL"/>  for this page.</param>
+        public CreateModel(ModelsDAL models)
         {
-            _context = context;
+            _models = models;
         }
 
         /// <summary>
@@ -41,11 +40,11 @@ namespace Artsofte.Pages.Employees
         /// <summary>
         /// The page handler for displaying the form to create a new <see cref="Models.Employee"/> object.
         /// </summary>        
-        public IActionResult OnGetAsync()
+        public IActionResult OnGet()
         {
             //Add data from other tables into selection menus.
-            Departments = new SelectList(_context.Departments, "Id", "Name");
-            ProgrammingLanguages = new SelectList(_context.ProgrammingLanguages, "Id", "Name");
+            Departments = new SelectList(_models.Departments, "Id", "Name");
+            ProgrammingLanguages = new SelectList(_models.ProgrammingLanguages, "Id", "Name");
             return Page();
         }
         /// <summary>
@@ -61,17 +60,15 @@ namespace Artsofte.Pages.Employees
             {
                 foreach (var error in ModelState.Values.SelectMany(v => v.Errors))
                 {
-                    Console.WriteLine(error.ErrorMessage);
+                    await Console.Out.WriteLineAsync(error.ErrorMessage);
                 }
                 //Update info into selection menus after refresh the page
-                Departments = new SelectList(_context.Departments, "Id", "Name");
-                ProgrammingLanguages = new SelectList(_context.ProgrammingLanguages, "Id", "Name");
+                Departments = new SelectList(_models.Departments, "Id", "Name");
+                ProgrammingLanguages = new SelectList(_models.ProgrammingLanguages, "Id", "Name");
                 return Page();
             }
-            //binding data from the ViewModel to the General model and insert it into the DB
-            var entry = _context.Add(new Employee());
-            entry.CurrentValues.SetValues(EmployeeVM);
-            await _context.SaveChangesAsync();
+            //binding data on the ViewModel and insert it into the DB            
+            await _models.InsertEmployee(EmployeeVM);
 
             return RedirectToPage("./Index");
         }

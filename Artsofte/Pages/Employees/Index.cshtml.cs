@@ -31,8 +31,7 @@ namespace Artsofte.Pages.Employees
         /// Retrieves a list of <see cref="Models.Employee"/> from the database and sorts them based on the specified <see cref="EmployeeSortState"/> states.
         /// </summary>
         /// <param name="sortOrder">The sorting order for the employee data. Default value is <see cref="EmployeeSortState.SurnameAsc"/>.</param>
-        /// <returns>A task that represents the asynchronous operation of retrieving and sorting employees.</returns>
-        public async Task OnGetAsync(EmployeeSortState sortOrder = EmployeeSortState.SurnameAsc)
+        public void OnGet(EmployeeSortState sortOrder = EmployeeSortState.SurnameAsc)
         {
             if (_models == null && !_models.IsDBExist)
             {

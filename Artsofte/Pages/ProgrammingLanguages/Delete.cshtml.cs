@@ -11,15 +11,15 @@ namespace Artsofte.Pages.ProgrammingLanguages
     /// </summary>
     public class DeleteModel : PageModel
     {
-        private readonly ArtsofteContext _context;
+        private readonly ModelsDAL _models;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DeleteModel"/> class.
         /// </summary>
-        /// <param name="context">The <see cref="ArtsofteContext"/> context object.</param>
-        public DeleteModel(ArtsofteContext context)
+        /// <param name="models">The <see cref="ModelsDAL"/> context object.</param>
+        public DeleteModel(ModelsDAL models)
         {
-            _context = context;
+            _models = models;
         }
 
         /// <summary>
@@ -33,14 +33,14 @@ namespace Artsofte.Pages.ProgrammingLanguages
         /// </summary>
         /// <param name="id">This parameter represents the ID of the <see cref="Models.ProgrammingLanguage"/> object that needs to be deleted..</param>
         /// <returns>The result of the GET request.</returns>
-        public async Task<IActionResult> OnGetAsync(int? id)
+        public IActionResult OnGet(int? id)
         {
-            if (id == null || _context.ProgrammingLanguages == null)
+            if (id == null || _models.ProgrammingLanguages == null)
             {
                 return NotFound();
             }
 
-            var programminglanguage = await _context.ProgrammingLanguages.FirstOrDefaultAsync(m => m.Id == id);
+            var programminglanguage = _models.ProgrammingLanguages.FirstOrDefault(m => m.Id == id);
 
             if (programminglanguage == null)
             {
@@ -59,17 +59,16 @@ namespace Artsofte.Pages.ProgrammingLanguages
         /// <returns>The result of the POST request.</returns>
         public async Task<IActionResult> OnPostAsync(int? id)
         {
-            if (id == null || _context.ProgrammingLanguages == null)
+            if (id == null || _models.ProgrammingLanguages == null)
             {
                 return NotFound();
             }
-            var programminglanguage = await _context.ProgrammingLanguages.FindAsync(id);
+            var programminglanguage = _models.ProgrammingLanguages.ToList().Find(p => p.Id == id);
 
             if (programminglanguage != null)
             {
                 ProgrammingLanguage = programminglanguage;
-                _context.ProgrammingLanguages.Remove(ProgrammingLanguage);
-                await _context.SaveChangesAsync();
+                await _models.DeleteProgrammingLanguageAsync(programminglanguage);
             }
 
             return RedirectToPage("./Index");

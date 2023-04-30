@@ -11,14 +11,14 @@ namespace Artsofte.Pages.Employees
     /// </summary>
     public class DetailsModel : PageModel
     {
-        private readonly ArtsofteContext _context;
+        private readonly ModelsDAL _models;
         /// <summary>
         /// Creates a new instance of the <see cref="DetailsModel"/> class.
         /// </summary>
-        /// <param name="context">The database context <see cref="ArtsofteContext"/>  for this page.</param>
-        public DetailsModel(ArtsofteContext context)
+        /// <param name="models">The database context <see cref="ModelsDAL"/>  for this page.</param>
+        public DetailsModel(ModelsDAL models)
         {
-            _context = context;
+            _models = models;
         }
         /// <summary>
         /// Property that binds to the <see cref="Models.Employee"/> model.
@@ -30,17 +30,14 @@ namespace Artsofte.Pages.Employees
         /// </summary>
         /// <param name="id">The ID of the <see cref="Models.Employee"/> to display.</param>
         /// <returns>The result of the HTTP GET request.</returns>
-        public async Task<IActionResult> OnGetAsync(int? id)
+        public IActionResult OnGet(int? id)
         {
-            if (id == null || _context.Employees == null)
+            if (id == null || _models.Employees == null)
             {
                 return NotFound();
             }
             //Binding data from the conected tables
-            var employee = await _context.Employees
-                                  .Include(d => d.Department)
-                                  .Include(p => p.ProgrammingLanguage)
-                                  .FirstOrDefaultAsync(m => m.Id == id);
+            var employee = _models.Employees.FirstOrDefault(m => m.Id == id);
 
             if (employee == null)
             {

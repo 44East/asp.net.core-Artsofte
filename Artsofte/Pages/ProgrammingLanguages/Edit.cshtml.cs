@@ -11,15 +11,15 @@ namespace Artsofte.Pages.ProgrammingLanguages
     /// </summary>
     public class EditModel : PageModel
     {
-        private readonly ArtsofteContext _context;
+        private readonly ModelsDAL _models;
         
         /// <summary>
         /// Creates a new instance of the <see cref="EditModel"/> class.
         /// </summary>
-        /// <param name="context">The database context <see cref="ArtsofteContext"/>  for this page.</param>
-        public EditModel(ArtsofteContext context)
+        /// <param name="models">The database context <see cref="ModelsDAL"/>  for this page.</param>
+        public EditModel(ModelsDAL models)
         {
-            _context = context;
+            _models = models;
         }
         
         /// <summary>
@@ -33,14 +33,14 @@ namespace Artsofte.Pages.ProgrammingLanguages
         /// </summary>
         /// <param name="id">The ID of the <see cref="Models.ProgrammingLanguage"/> to edit.</param>
         /// <returns>The result of the GET request.</returns>
-        public async Task<IActionResult> OnGetAsync(int? id)
+        public IActionResult OnGet(int? id)
         {
-            if (id == null || _context.ProgrammingLanguages == null)
+            if (id == null || _models.ProgrammingLanguages == null)
             {
                 return NotFound();
             }
 
-            var programminglanguage =  await _context.ProgrammingLanguages.FirstOrDefaultAsync(m => m.Id == id);
+            var programminglanguage =  _models.ProgrammingLanguages.FirstOrDefault(m => m.Id == id);
             if (programminglanguage == null)
             {
                 return NotFound();
@@ -57,8 +57,7 @@ namespace Artsofte.Pages.ProgrammingLanguages
         {
             if (programmingLanguage != null)
             {
-                _context.ProgrammingLanguages.Update(programmingLanguage);
-                await _context.SaveChangesAsync();
+                await _models.UpdateProgrammingLanguagesAsync(programmingLanguage);
                 return RedirectToPage("./Index");
             }
             return Page();

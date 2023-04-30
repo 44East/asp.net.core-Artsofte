@@ -11,15 +11,14 @@ namespace Artsofte.Pages.ProgrammingLanguages
     /// </summary>
     public class IndexModel : PageModel
     {
-        private readonly ArtsofteContext _context;
-        
+        private readonly ModelsDAL _models;
         /// <summary>
         /// Creates a new instance of the <see cref="IndexModel"/> class.
         /// </summary>
-        /// <param name="context">The database context <see cref="ArtsofteContext"/>  for this page.</param>
-        public IndexModel(ArtsofteContext context)
+        /// <param name="models">The database context <see cref="ModelsDAL"/>  for this page.</param>
+        public IndexModel(ModelsDAL models)
         {
-            _context = context;
+            _models = models;
         }
         /// <summary>
         /// The list of <see cref="Models.ProgrammingLanguage"/> to display on the index page.
@@ -31,17 +30,17 @@ namespace Artsofte.Pages.ProgrammingLanguages
         /// </summary>
         /// <param name="sortOrder">The sorting order for the employee data. Default value is <see cref="ProgLanguageSortState.NameAsc"/>.</param>
         /// <returns>A task that represents the asynchronous operation of retrieving and sorting employees.</returns>
-        public async Task OnGetAsync(ProgLanguageSortState sortOrder = ProgLanguageSortState.NameAsc)
+        public void OnGet(ProgLanguageSortState sortOrder = ProgLanguageSortState.NameAsc)
         {
-            if (_context.ProgrammingLanguages == null)
+            if (_models.ProgrammingLanguages == null)
             {
                 // If there are no Programming Languages in the database, initialize an empty list and return.
                 ProgrammingLanguages = new List<ProgrammingLanguage>();
                 return;
             }
 
-            // Create an IQueryable object for the Programming Languages in the database.
-            IQueryable<ProgrammingLanguage> languagesIQ = _context.ProgrammingLanguages;
+            // Create an IEnumerable object for the Programming Languages from the database.
+            IEnumerable<ProgrammingLanguage> languages = _models.ProgrammingLanguages;
 
             // Set up ViewData for the sort order. These values will be used in the Razor view to create links to sort the data.
             ViewData["NameSort"] = sortOrder == ProgLanguageSortState.NameAsc ? ProgLanguageSortState.NameDesc : ProgLanguageSortState.NameAsc;
@@ -49,14 +48,14 @@ namespace Artsofte.Pages.ProgrammingLanguages
             // Sort the Prog. languages based on the sortOrder parameter by ProgLanguageSortState.
             // The switch statement selects the appropriate LINQ method based on the sortOrder value.
             // If an invalid value is passed, the default case sorts by Name.
-            languagesIQ = sortOrder switch
+            languages = sortOrder switch
             {
-                ProgLanguageSortState.NameDesc => languagesIQ.OrderByDescending(l => l.Name),
-                _ => languagesIQ.OrderBy(l => l.Name)
+                ProgLanguageSortState.NameDesc => languages.OrderByDescending(l => l.Name),
+                _ => languages.OrderBy(l => l.Name)
             };
 
-            // Bind the sorted data to the ProgrammingLanguages property, with AsNoTracking() to improve performance.
-            ProgrammingLanguages = await languagesIQ.AsNoTracking().ToListAsync();
+            // Bind the sorted data to the ProgrammingLanguages property.
+            ProgrammingLanguages = languages.ToList();
         }
     }
 }

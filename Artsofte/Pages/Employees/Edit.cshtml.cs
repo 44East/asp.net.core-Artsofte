@@ -12,12 +12,11 @@ namespace Artsofte.Pages.Employees
     /// </summary>
     public class EditModel : PageModel
     {
-        private readonly ArtsofteContext _context;
         private readonly ModelsDAL _models;
         /// <summary>
         /// Creates a new instance of the <see cref="EditModel"/> class.
         /// </summary>
-        /// <param name="context">The database context <see cref="ArtsofteContext"/>  for this page.</param>
+        /// <param name="models">The database context <see cref="ModelsDAL"/>  for this page.</param>
         public EditModel(ModelsDAL models)
         {
             _models = models;
@@ -34,7 +33,7 @@ namespace Artsofte.Pages.Employees
         /// </summary>
         /// <param name="id">The Id of the <see cref="Models.Employee"/> to edit.</param>
         /// <returns>The result of the GET request.</returns>
-        public async Task<IActionResult> OnGetAsync(int? id)
+        public  IActionResult OnGet(int? id)
         {
             if (id == null || !_models.IsDBExist)
             {
@@ -42,7 +41,6 @@ namespace Artsofte.Pages.Employees
             }
 
             var employee =  _models.Employees.FirstOrDefault(m => m.Id == id);
-            var employee1 = (await _models.GetAllEmployeesData()).FirstOrDefault(m => m.Id == id);
             if (employee == null)
             {
                 return NotFound();
@@ -62,7 +60,7 @@ namespace Artsofte.Pages.Employees
         {
             if (employee != null)
             {
-                await _models.UpdateEmployee(employee);                
+                await _models.UpdateEmployeeAsync(employee);                
                 return RedirectToPage("./Index");
             }
             return Page();

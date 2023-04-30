@@ -11,16 +11,16 @@ namespace Artsofte.Pages.ProgrammingLanguages
     /// </summary>
     public class CreateModel : PageModel
     {
-        private readonly ArtsofteContext _context;
+        private readonly ModelsDAL _models;
         /// <summary>
         /// Creates a new instance of the <see cref="CreateModel"/> class.
         /// </summary>
-        /// <param name="context">The database context <see cref="ArtsofteContext"/>  for this page.</param>
-        public CreateModel(ArtsofteContext context)
+        /// <param name="models">The database context <see cref="ModelsDAL"/>  for this page.</param>
+        public CreateModel(ModelsDAL models)
         {
-            _context = context;
+            _models = models;
         }
-        
+
         /// <summary>
         /// The page handler for displaying the form to create a new <see cref="Models.ProgrammingLanguage"/> object.
         /// </summary>
@@ -43,14 +43,12 @@ namespace Artsofte.Pages.ProgrammingLanguages
         /// <returns>The result of the form submission.</returns>
         public async Task<IActionResult> OnPostAsync()
         {
-          if (!ModelState.IsValid || _context.ProgrammingLanguages == null || ProgrammingLanguageVM == null)
+            if (!ModelState.IsValid ||  ProgrammingLanguageVM == null)
             {
                 return Page();
             }
-            //binding data from the ViewModel to the General model and insert it into the DB
-            var entry = _context.Add(new ProgrammingLanguage());
-            entry.CurrentValues.SetValues(ProgrammingLanguageVM);
-            await _context.SaveChangesAsync();
+            //binding data on the ViewModel and insert it into the DB
+            await _models.InsertProgrammingLanguages(ProgrammingLanguageVM);
 
             return RedirectToPage("./Index");
         }

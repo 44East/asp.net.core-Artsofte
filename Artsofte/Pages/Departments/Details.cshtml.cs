@@ -12,33 +12,34 @@ namespace Artsofte.Pages.Departments
     public class DetailsModel : PageModel
     {
         private readonly ArtsofteContext _context;
-
+        private readonly ModelsDAL _models;
         /// <summary>
         /// Creates a new instance of the <see cref="DetailsModel"/> class.
         /// </summary>
-        /// <param name="context">The database context <see cref="ArtsofteContext"/>  for this page.</param>
-        public DetailsModel(ArtsofteContext context)
+        /// <param name="context">The database context <see cref="ModelsDAL"/>  for this page.</param>
+        public DetailsModel(ModelsDAL models)
         {
-            _context = context;
+            _models = models;
+
         }
         /// <summary>
         /// Property that binds to the <see cref="Models.Department"/> model.
         /// </summary>
-        public Department Department { get; set; } = default!;
+        public Department Department { get; set; }
         
         /// <summary>
         /// Handles the HTTP GET request for displaying the details of a current <see cref="Models.Department"/> object.
         /// </summary>
         /// <param name="id">The ID of the <see cref="Models.Department"/> to display.</param>
         /// <returns>The result of the HTTP GET request.</returns>
-        public async Task<IActionResult> OnGetAsync(int? id)
+        public IActionResult OnGet(int? id)
         {
-            if (id == null || _context.Departments == null)
+            if (id == null || _models.Departments == null)
             {
                 return NotFound();
             }
 
-            var department = await _context.Departments.FirstOrDefaultAsync(m => m.Id == id);
+            var department = _models.Departments.FirstOrDefault(m => m.Id == id);
             if (department == null)
             {
                 return NotFound();

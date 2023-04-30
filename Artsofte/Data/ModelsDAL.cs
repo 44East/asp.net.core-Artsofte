@@ -14,7 +14,6 @@ namespace Artsofte.Data
         private string _pathToSqlQueries;
         private bool _disposed;
         private SqlConnection _sqlConnection = null;
-        private bool _dbDataExists;
 
         public IEnumerable<Employee> Employees { get; set; }
         public IEnumerable<Department> Departments { get; set; }
@@ -42,7 +41,10 @@ namespace Artsofte.Data
             {
                 ConnectionString = _connectionString
             };
-            await _sqlConnection.OpenAsync();
+            if (_sqlConnection.State != ConnectionState.Open)
+            {
+                await _sqlConnection.OpenAsync();
+            }
         }
         /// <summary>
         /// Closing connection to the MSSQL DB 
@@ -79,13 +81,14 @@ namespace Artsofte.Data
         //All methods (below) for CRUD processes use the ADO.NET technology
         #region CRUD Operations
 
+        #region Checking and Creation DB
         public async Task CheckDataBaseStatus()
         {
             if (await IsTheLocalDBExistsAsync())
             {
                 Employees = await GetAllEmployeesData();
                 Departments = await GetDepartmentsData();
-                ProgrammingLanguages = await GetProgrammingLanguagesData();
+                ProgrammingLanguages = await GetProgrammingLanguagesDataAsync();
                 IsDBExist = true;
                 return;
             }
@@ -190,6 +193,9 @@ namespace Artsofte.Data
             } while (queriesStack.Count > 0);
             await CloseConnectionAsync();
         }
+        #endregion
+
+        #region Read
         /// <summary>
         /// Returns the ToDoTasks collection from the DB and it includes a Persons names for the ToDoTask model.
         /// </summary>
@@ -197,17 +203,17 @@ namespace Artsofte.Data
         {
             await OpenConnectionAsync();
             if (_sqlConnection == null)
-                return new Collection<Employee>();
+                return new List<Employee>();
 
             var employeesList = new List<Employee>();
-            string sql = @File.ReadAllText(Path.Combine(_pathToSqlQueries, "GetEmployeesData.sql"), Encoding.GetEncoding(1251));
+            string sql = await @File.ReadAllTextAsync(Path.Combine(_pathToSqlQueries, "GetEmployeesData.sql"), Encoding.GetEncoding(1251));
 
             using (SqlCommand command = new SqlCommand(sql, _sqlConnection))
             {
                 command.CommandType = CommandType.Text;
                 using (SqlDataReader reader = await command.ExecuteReaderAsync())
                 {
-                    while (reader.Read())
+                    while (await reader.ReadAsync())
                     {
                         employeesList.Add(new Employee()
                         {
@@ -220,8 +226,7 @@ namespace Artsofte.Data
                             ProgrammingLanguageId = (int)reader["ProgrammingLanguageId"],
                             Department = new Department() { Id = (int)reader["DepartmentId"], Name = (string)reader["deptName"], Floor = (string)reader["deptFloor"] },
                             ProgrammingLanguage = new ProgrammingLanguage() { Id = (int)reader["ProgrammingLanguageId"], Name = (string)reader["ProgLangName"] }
-                        }
-                        );
+                        });
                     }
                 }
             }
@@ -238,13 +243,13 @@ namespace Artsofte.Data
             if (_sqlConnection == null)
                 return new Collection<Department>();
             var departmentsList = new Collection<Department>();
-            var sql = @File.ReadAllText(Path.Combine(_pathToSqlQueries, "GetDepartmentsData.sql"), Encoding.GetEncoding(1251));
+            var sql = await @File.ReadAllTextAsync(Path.Combine(_pathToSqlQueries, "GetDepartmentsData.sql"), Encoding.GetEncoding(1251));
             using (SqlCommand command = new SqlCommand(sql, _sqlConnection))
             {
                 command.CommandType = CommandType.Text;
-                using (SqlDataReader reader = command.ExecuteReader())
+                using (SqlDataReader reader = await command.ExecuteReaderAsync())
                 {
-                    while (reader.Read())
+                    while (await reader.ReadAsync())
                     {
                         departmentsList.Add(new Department()
                         {
@@ -261,19 +266,19 @@ namespace Artsofte.Data
 
         }
 
-        public async Task<IEnumerable<ProgrammingLanguage>> GetProgrammingLanguagesData()
+        public async Task<IEnumerable<ProgrammingLanguage>> GetProgrammingLanguagesDataAsync()
         {
             await OpenConnectionAsync();
             if (_sqlConnection == null)
                 return new Collection<ProgrammingLanguage>();
             var progLangsList = new Collection<ProgrammingLanguage>();
-            var sql = @File.ReadAllText(Path.Combine(_pathToSqlQueries, "GetProgrammingLnguagesData.sql"), Encoding.GetEncoding(1251));
+            var sql = await @File.ReadAllTextAsync(Path.Combine(_pathToSqlQueries, "GetProgrammingLnguagesData.sql"), Encoding.GetEncoding(1251));
             using (SqlCommand command = new SqlCommand(sql, _sqlConnection))
             {
                 command.CommandType = CommandType.Text;
-                using (SqlDataReader reader = command.ExecuteReader())
+                using (SqlDataReader reader = await command.ExecuteReaderAsync())
                 {
-                    while (reader.Read())
+                    while (await reader.ReadAsync())
                     {
                         progLangsList.Add(new ProgrammingLanguage()
                         {
@@ -288,6 +293,9 @@ namespace Artsofte.Data
             return progLangsList;
 
         }
+        #endregion
+
+        #region Create
         /// <summary>
         /// It method insert into DB NEW ToDoTask.
         /// It receives params of the Person and the ToDoTask then it will create dependences between the Person table and the Task table
@@ -319,7 +327,12 @@ namespace Artsofte.Data
                     await Console.Out.WriteLineAsync(ex.Message);
                     throw;
                 }
-                transaction?.Commit();
+                finally
+                {
+                    transaction?.Commit();
+                    //Refresh data from DB after update.
+                    Employees = await GetAllEmployeesData();
+                }
             }
             await CloseConnectionAsync();
         }
@@ -327,12 +340,12 @@ namespace Artsofte.Data
         /// Add NEW Person in the Person table into DB
         /// </summary>
         /// <param name="person"></param>
-        public async Task InsertDepartment(DepartmentVM department)
+        public async Task InsertDepartmentAsync(DepartmentVM department)
         {
             await OpenConnectionAsync();
             if (_sqlConnection == null)
                 return;
-            var sql = @File.ReadAllText(Path.Combine(_pathToSqlQueries, "InsertDepartment.sql"), Encoding.GetEncoding(1251));
+            var sql = await @File.ReadAllTextAsync(Path.Combine(_pathToSqlQueries, "InsertDepartment.sql"), Encoding.GetEncoding(1251));
             var values = $@" (N'{department.Name}', N'{department.Floor}')";
             using (SqlCommand command = new SqlCommand(sql + values, _sqlConnection))
             {
@@ -342,7 +355,7 @@ namespace Artsofte.Data
                     transaction = _sqlConnection.BeginTransaction();
                     command.Transaction = transaction;
                     command.CommandType = CommandType.Text;
-                    command.ExecuteNonQuery();
+                    await command.ExecuteNonQueryAsync();
                 }
                 catch (SqlException ex)
                 {
@@ -350,7 +363,12 @@ namespace Artsofte.Data
                     await Console.Out.WriteLineAsync(ex.Message);
                     throw;
                 }
-                transaction?.Commit();
+                finally
+                {
+                    transaction?.Commit();
+                    //Refresh data from the DB
+                    Departments = await GetDepartmentsData();
+                }
             }
             await CloseConnectionAsync();
         }
@@ -360,7 +378,7 @@ namespace Artsofte.Data
             await OpenConnectionAsync();
             if (_sqlConnection == null)
                 return;
-            var sql = @File.ReadAllText(Path.Combine(_pathToSqlQueries, "InsertProgrammingLanguage.sql"), Encoding.GetEncoding(1251));
+            var sql = await @File.ReadAllTextAsync(Path.Combine(_pathToSqlQueries, "InsertProgrammingLanguage.sql"), Encoding.GetEncoding(1251));
             var values = $@" (N'{languageVM.Name}')";
             using (SqlCommand command = new SqlCommand(sql + values, _sqlConnection))
             {
@@ -370,7 +388,7 @@ namespace Artsofte.Data
                     transaction = _sqlConnection.BeginTransaction();
                     command.Transaction = transaction;
                     command.CommandType = CommandType.Text;
-                    command.ExecuteNonQuery();
+                    await command.ExecuteNonQueryAsync();
                 }
                 catch (SqlException ex)
                 {
@@ -378,88 +396,111 @@ namespace Artsofte.Data
                     await Console.Out.WriteLineAsync(ex.Message);
                     throw;
                 }
-                transaction?.Commit();
+                finally
+                {
+                    transaction?.Commit();
+                    //Refresh data from the DB
+                    ProgrammingLanguages = await GetProgrammingLanguagesDataAsync();
+                }
             }
             await CloseConnectionAsync();
         }
+        #endregion
+
+        #region Delete
         /// <summary>
         /// Delete the ToDoTask in the DB by [ID] params
         /// </summary>
         /// <param name="id"></param>
-        public async Task DeleteEmployee(int id)
+        public async Task DeleteEmployeeAsync(Employee employee)
         {
             await OpenConnectionAsync();
             if (_sqlConnection == null)
                 return;
-            var sql = @File.ReadAllText(Path.Combine(_pathToSqlQueries, "DeleteEmployee.sql"), Encoding.GetEncoding(1251));
-            using (SqlCommand command = new SqlCommand(sql + id.ToString(), _sqlConnection))
+            var sql = await @File.ReadAllTextAsync(Path.Combine(_pathToSqlQueries, "DeleteEmployee.sql"), Encoding.GetEncoding(1251));
+            using (SqlCommand command = new SqlCommand(sql + employee.Id.ToString(), _sqlConnection))
             {
                 try
                 {
                     command.CommandType = CommandType.Text;
-                    command.ExecuteNonQuery();
+                    await command.ExecuteNonQueryAsync();
                 }
                 catch (SqlException ex)
                 {
                     await Console.Out.WriteLineAsync(ex.Message);
                     throw;
                 }
+                finally
+                {
+                    //Refresh data from DB after update.
+                    Employees = await GetAllEmployeesData();
+                }
             }
             await CloseConnectionAsync();
         }
 
-        public async Task DeleteDepartment(int id)
+        public async Task DeleteDepartmentAsync(Department department)
         {
             await OpenConnectionAsync();
             if (_sqlConnection == null)
                 return;
-            var sql = @File.ReadAllText(Path.Combine(_pathToSqlQueries, "DeleteDepartment.sql"), Encoding.GetEncoding(1251));
-            using (SqlCommand command = new SqlCommand(sql + id.ToString(), _sqlConnection))
+            var sql = await @File.ReadAllTextAsync(Path.Combine(_pathToSqlQueries, "DeleteDepartment.sql"), Encoding.GetEncoding(1251));
+            using (SqlCommand command = new SqlCommand(sql + department.Id.ToString(), _sqlConnection))
             {
                 try
                 {
                     command.CommandType = CommandType.Text;
-                    command.ExecuteNonQuery();
+                    await command.ExecuteNonQueryAsync();
                 }
                 catch (SqlException ex)
                 {
                     await Console.Out.WriteLineAsync(ex.Message);
                     throw;
                 }
+                finally
+                {
+                    //Refresh data from the DB
+                    Departments = await GetDepartmentsData();
+                }
             }
             await CloseConnectionAsync();
         }
 
-        public async Task DeleteProgrammingLanguage(int id)
+        public async Task DeleteProgrammingLanguageAsync(ProgrammingLanguage language)
         {
             await OpenConnectionAsync();
             if (_sqlConnection == null)
                 return;
-            var sql = @File.ReadAllText(Path.Combine(_pathToSqlQueries, "DeleteProgrammingLanguage.sql"), Encoding.GetEncoding(1251));
-            using (SqlCommand command = new SqlCommand(sql + id.ToString(), _sqlConnection))
+            var sql = await @File.ReadAllTextAsync(Path.Combine(_pathToSqlQueries, "DeleteProgrammingLanguage.sql"), Encoding.GetEncoding(1251));
+            using (SqlCommand command = new SqlCommand(sql + language.Id.ToString(), _sqlConnection))
             {
                 try
                 {
                     command.CommandType = CommandType.Text;
-                    command.ExecuteNonQuery();
+                    await command.ExecuteNonQueryAsync();
                 }
                 catch (SqlException ex)
                 {
                     await Console.Out.WriteLineAsync(ex.Message);
                     throw;
                 }
+                finally
+                {
+                    // Refresh data from the DB
+                    ProgrammingLanguages = await GetProgrammingLanguagesDataAsync();
+                }
             }
             await CloseConnectionAsync();
         }
+        #endregion
 
-
-
-        public async Task UpdateEmployee(Employee employee)
+        #region Update
+        public async Task UpdateEmployeeAsync(Employee employee)
         {
             await OpenConnectionAsync();
             if (_sqlConnection == null)
                 return;
-            var sql = @File.ReadAllText(Path.Combine(_pathToSqlQueries, "UpdateEmployee.sql"), Encoding.GetEncoding(1251));
+            var sql = await @File.ReadAllTextAsync(Path.Combine(_pathToSqlQueries, "UpdateEmployee.sql"), Encoding.GetEncoding(1251));
             var values = $@" Name = N'{employee.Name}', Surname = N'{employee.Surname}', Age = {employee.Age}, Gender = N'{employee.Gender}', DepartmentId = {employee.DepartmentId}, ProgrammingLanguageId = {employee.ProgrammingLanguageId}";
             var fullQuery = string.Format(sql, values, employee.Id);
             using (SqlCommand command = new SqlCommand(fullQuery, _sqlConnection))
@@ -470,15 +511,20 @@ namespace Artsofte.Data
                     transaction = _sqlConnection.BeginTransaction();
                     command.Transaction = transaction;
                     command.CommandType = CommandType.Text;
-                    command.ExecuteNonQuery();
+                    await command.ExecuteReaderAsync();
                 }
                 catch (SqlException ex)
                 {
-                    transaction?.Rollback();
+                    await transaction?.RollbackAsync();
                     await Console.Out.WriteLineAsync(ex.Message);
                     throw;
                 }
-                transaction?.Commit();
+                finally
+                {
+                    await transaction?.CommitAsync();
+                    //Refresh data from DB after update.
+                    Employees = await GetAllEmployeesData();
+                }
             }
             await CloseConnectionAsync();
         }
@@ -486,12 +532,12 @@ namespace Artsofte.Data
         /// Add NEW Person in the Person table into DB
         /// </summary>
         /// <param name="person"></param>
-        public async Task UpdateDepartment(Department department)
+        public async Task UpdateDepartmentAsync(Department department)
         {
             await OpenConnectionAsync();
             if (_sqlConnection == null)
                 return;
-            var sql = @File.ReadAllText(Path.Combine(_pathToSqlQueries, "UpdateDepartment.sql"), Encoding.GetEncoding(1251));
+            var sql = await @File.ReadAllTextAsync(Path.Combine(_pathToSqlQueries, "UpdateDepartment.sql"), Encoding.GetEncoding(1251));
             var values = $@" Name = N'{department.Name}', Floor =  N'{department.Floor}'";
             var fullQuery = string.Format(sql, values, department.Id);
             using (SqlCommand command = new SqlCommand(fullQuery, _sqlConnection))
@@ -502,25 +548,30 @@ namespace Artsofte.Data
                     transaction = _sqlConnection.BeginTransaction();
                     command.Transaction = transaction;
                     command.CommandType = CommandType.Text;
-                    command.ExecuteNonQuery();
+                    await command.ExecuteNonQueryAsync();
                 }
                 catch (SqlException ex)
                 {
-                    transaction?.Rollback();
+                    await transaction?.RollbackAsync();
                     await Console.Out.WriteLineAsync(ex.Message);
                     throw;
                 }
-                transaction?.Commit();
+                finally
+                {
+                    await transaction?.CommitAsync();
+                    //Refresh data from DB after update.
+                    Departments = await GetDepartmentsData();
+                }
             }
             await CloseConnectionAsync();
         }
 
-        public async Task UpdateProgrammingLanguages(ProgrammingLanguage language)
+        public async Task UpdateProgrammingLanguagesAsync(ProgrammingLanguage language)
         {
             await OpenConnectionAsync();
             if (_sqlConnection == null)
                 return;
-            var sql = @File.ReadAllText(Path.Combine(_pathToSqlQueries, "InsertProgrammingLanguage.sql"), Encoding.GetEncoding(1251));
+            var sql = await @File.ReadAllTextAsync(Path.Combine(_pathToSqlQueries, "UpdateProgrammingLanguage.sql"), Encoding.GetEncoding(1251));
             var values = $@" Name = N'{language.Name}'";
             var fullQuery = string.Format(sql, values, language.Id);
             using (SqlCommand command = new SqlCommand(fullQuery, _sqlConnection))
@@ -531,20 +582,27 @@ namespace Artsofte.Data
                     transaction = _sqlConnection.BeginTransaction();
                     command.Transaction = transaction;
                     command.CommandType = CommandType.Text;
-                    command.ExecuteNonQuery();
+                    await command.ExecuteNonQueryAsync();
                 }
                 catch (SqlException ex)
                 {
-                    transaction?.Rollback();
+                    await transaction?.RollbackAsync();
                     await Console.Out.WriteLineAsync(ex.Message);
                     throw;
                 }
-                transaction?.Commit();
+                finally
+                {
+                    await transaction?.CommitAsync();
+                    //Refresh data from DB after update.
+                    ProgrammingLanguages = await GetProgrammingLanguagesDataAsync();
+                }
             }
             await CloseConnectionAsync();
         }
 
 
     }
+    #endregion
+
     #endregion
 }
