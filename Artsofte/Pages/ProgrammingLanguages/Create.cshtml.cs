@@ -11,12 +11,12 @@ namespace Artsofte.Pages.ProgrammingLanguages
     /// </summary>
     public class CreateModel : PageModel
     {
-        private readonly ModelsDAL _models;
+        private readonly ModelsDataAccessLayer _models;
         /// <summary>
         /// Creates a new instance of the <see cref="CreateModel"/> class.
         /// </summary>
-        /// <param name="models">The database context <see cref="ModelsDAL"/>  for this page.</param>
-        public CreateModel(ModelsDAL models)
+        /// <param name="models">The database context <see cref="ModelsDataAccessLayer"/>  for this page.</param>
+        public CreateModel(ModelsDataAccessLayer models)
         {
             _models = models;
         }

@@ -11,13 +11,13 @@ namespace Artsofte.Pages.ProgrammingLanguages
     /// </summary>
     public class DeleteModel : PageModel
     {
-        private readonly ModelsDAL _models;
+        private readonly ModelsDataAccessLayer _models;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DeleteModel"/> class.
         /// </summary>
-        /// <param name="models">The <see cref="ModelsDAL"/> context object.</param>
-        public DeleteModel(ModelsDAL models)
+        /// <param name="models">The <see cref="ModelsDataAccessLayer"/> context object.</param>
+        public DeleteModel(ModelsDataAccessLayer models)
         {
             _models = models;
         }

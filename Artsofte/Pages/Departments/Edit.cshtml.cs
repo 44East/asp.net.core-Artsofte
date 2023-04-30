@@ -11,13 +11,12 @@ namespace Artsofte.Pages.Departments
     /// </summary>
     public class EditModel : PageModel
     {
-        private readonly ArtsofteContext _context;
-        private readonly ModelsDAL _models;
+        private readonly ModelsDataAccessLayer _models;
         /// <summary>
         /// Creates a new instance of the <see cref="EditModel"/> class.
         /// </summary>
-        /// <param name="models">The database context <see cref="ModelsDAL"/>  for this page.</param>
-        public EditModel(ModelsDAL models)
+        /// <param name="models">The database context <see cref="ModelsDataAccessLayer"/>  for this page.</param>
+        public EditModel(ModelsDataAccessLayer models)
         {
             _models = models;
         }

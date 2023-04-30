@@ -12,13 +12,12 @@ namespace Artsofte.Pages.Employees
     /// </summary>
     public class DeleteModel : PageModel
     {
-        private readonly ArtsofteContext _context;
-        private readonly ModelsDAL _models;
+        private readonly ModelsDataAccessLayer _models;
         /// <summary>
         /// Initializes a new instance of the <see cref="DeleteModel"/> class.
         /// </summary>
-        /// <param name="models">The <see cref="ModelsDAL"/> context.</param>
-        public DeleteModel( ModelsDAL models)
+        /// <param name="models">The <see cref="ModelsDataAccessLayer"/> context.</param>
+        public DeleteModel( ModelsDataAccessLayer models)
         {
             _models = models;
         }

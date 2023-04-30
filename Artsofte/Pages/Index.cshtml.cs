@@ -6,14 +6,14 @@ namespace Artsofte.Pages
 {
     public class IndexModel : PageModel
     {
-        private readonly ModelsDAL _models;
-        public IndexModel(ModelsDAL modelsDAL)
+        private readonly ModelsDataAccessLayer _models;
+        public IndexModel(ModelsDataAccessLayer modelsDAL)
         {
             _models = modelsDAL;
         }
         public async Task OnGet()
         {
-            await _models.CheckDataBaseStatus();
+            await _models.CheckDataBaseStatusAsync();
         }
     }
 }
