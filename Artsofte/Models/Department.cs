@@ -20,11 +20,6 @@ namespace Artsofte.Models
         /// Gets the floor where the department is located.
         /// </summary>
         public string Floor { get; set; }
-        /// <summary>
-        /// Gets the collection of <see cref="Employee"/> who work in the department.
-        /// It uses One-to-Many relationships by EF Core
-        /// </summary>
-        public ICollection<Employee> Employees { get; set; }
 
     }
 }

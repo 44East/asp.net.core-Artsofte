@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿
 using Artsofte.Data;
 
 
@@ -8,7 +8,6 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorPages();
 // Add a singleton for the Data Access Layer to establish a connection to the database and provide CRUD (Create, Read, Update, Delete) operations.
 builder.Services.AddSingleton<ModelsDataAccessLayer>(ModelsDataAccessLayer.Instance);
-builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 
 var app = builder.Build();
@@ -22,9 +21,7 @@ if (!app.Environment.IsDevelopment())
 }
 else
 {
-    // This middleware helps to detect and diagnose errors with Entity Framework Core migrations.
     app.UseDeveloperExceptionPage();
-    app.UseMigrationsEndPoint();
 }
 
 app.UseHttpsRedirection();

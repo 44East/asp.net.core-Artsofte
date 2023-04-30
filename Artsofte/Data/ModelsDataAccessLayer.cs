@@ -5,8 +5,6 @@ using System;
 using Artsofte.Models;
 using System.Text;
 using Artsofte.Models.ViewModels;
-using Newtonsoft.Json.Linq;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace Artsofte.Data
 {
