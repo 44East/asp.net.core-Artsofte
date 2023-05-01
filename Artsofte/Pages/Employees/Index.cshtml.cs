@@ -27,7 +27,7 @@ namespace Artsofte.Pages.Employees
         public IList<Employee> Employees { get; set; }
 
         /// <summary>
-        /// Retrieves a list of <see cref="Models.Employee"/> from the database and sorts them based on the specified <see cref="EmployeeSortState"/> states.
+        /// Receives a collection of <see cref="Models.Employee"/> from the <see cref="ModelsDataAccessLayer"/> and sorts them based on the specified <see cref="EmployeeSortState"/> states.
         /// </summary>
         /// <param name="sortOrder">The sorting order for the employee data. Default value is <see cref="EmployeeSortState.SurnameAsc"/>.</param>
         public void OnGet(EmployeeSortState sortOrder = EmployeeSortState.SurnameAsc)

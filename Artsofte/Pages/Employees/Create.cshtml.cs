@@ -67,7 +67,7 @@ namespace Artsofte.Pages.Employees
                 ProgrammingLanguages = new SelectList(_models.ProgrammingLanguages, "Id", "Name");
                 return Page();
             }
-            //binding data on the ViewModel and insert it into the DB            
+            //send data of the ViewModel and insert it into the DB            
             await _models.InsertEmployee(EmployeeVM);
 
             return RedirectToPage("./Index");

@@ -1,5 +1,4 @@
 ﻿using Artsofte.Data;
-using Artsofte.Models;
 using Artsofte.Models.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -48,7 +47,7 @@ namespace Artsofte.Pages.Departments
             {
                 return Page();
             }
-            //binding data on the ViewModel and insert it into the DB.
+            // send data of the ViewModel and insert it into the DB.
             await _models.InsertDepartmentAsync(DepartmentVM);
 
             return RedirectToPage("./Index");

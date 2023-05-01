@@ -1,10 +1,10 @@
 ﻿using Microsoft.Data.SqlClient;
 using System.Collections.ObjectModel;
 using System.Data;
-using System;
 using Artsofte.Models;
 using System.Text;
 using Artsofte.Models.ViewModels;
+using System.Transactions;
 
 namespace Artsofte.Data
 {
@@ -50,6 +50,7 @@ namespace Artsofte.Data
         {
             _connectionString = $@"Server=(localdb)\mssqllocaldb;Database=master;Trusted_Connection=True;MultipleActiveResultSets=true";
             _pathToSqlQueries = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "sql_queries");
+            //Before checking = state doesn't exist
             IsDBExist = false;
         }
         /// <summary>
@@ -58,7 +59,7 @@ namespace Artsofte.Data
         /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
         private async Task OpenConnectionAsync()
         {
-            if (_connectionString == null)
+            if (string.IsNullOrEmpty(_connectionString))
                 return;
             _sqlConnection = new SqlConnection()
             {
@@ -75,7 +76,7 @@ namespace Artsofte.Data
         /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
         private async Task CloseConnectionAsync()
         {
-            if (_sqlConnection.State != ConnectionState.Closed)
+            if (_sqlConnection.State != ConnectionState.Closed && _sqlConnection != null)
             {
                 await _sqlConnection.CloseAsync();
             }
@@ -91,7 +92,7 @@ namespace Artsofte.Data
             _disposed = true;
         }
         /// <summary>
-        /// Disposing of the <see cref="SqlConnection"/> and finalizing [this.instance]
+        /// Realize Disposable method for disposing this class. In a asynchronously process
         /// </summary>
         /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
         public async Task DisposeAsync()
@@ -101,7 +102,7 @@ namespace Artsofte.Data
         }
 
         /// <summary>
-        /// Realize IDisposable method for disposing this class.
+        /// Realize IDisposable method for disposing this class. In a synchronously process
         /// </summary>
         public void Dispose()
         {
@@ -160,8 +161,6 @@ namespace Artsofte.Data
         private async Task<bool> IsTheLocalDBExistsAsync()
         {
             await OpenConnectionAsync();
-            //Before checking, set bool to false
-            var isDBExists = false;
             //use local folder for received SQL queries
             var sql = @File.ReadAllText(Path.Combine(_pathToSqlQueries, "CheckDataBaseForExisting.sql"), Encoding.GetEncoding(1251));
             using (SqlCommand command = new SqlCommand(sql, _sqlConnection))
@@ -171,17 +170,17 @@ namespace Artsofte.Data
                 {
                     while (await reader.ReadAsync())
                     {
-                        isDBExists = ((string)reader["name"]).Equals("Artsofte.Data");//The query must return full name of database
+                        return ((string)reader["name"]).Equals("Artsofte.Data");//The query must return full name of database [Artsofte.Data]
                     }
                 }
             }
             await CloseConnectionAsync();
 
-            return isDBExists;
+            return false;
         }
         /// <summary>
         /// Creates the Artsofte database structure by executing SQL scripts stored in a local folder.
-        /// Uses the Stack collection to makes the database with queries.
+        /// Uses the Stack collection to makes the database by querys queue
         /// </summary>
         /// <returns> A task representing the asynchronous operation.</returns>
         private async Task CreationDBAsync()
@@ -198,15 +197,33 @@ namespace Artsofte.Data
             {
                 using (SqlCommand command = new SqlCommand(queriesStack.Pop(), _sqlConnection))
                 {
+                    //If there are problems during a transaction, all changes will be rolled back.
+                    SqlTransaction transaction = null;
                     try
                     {
+                        transaction = _sqlConnection.BeginTransaction();
+                        command.Transaction = transaction;
                         command.CommandType = CommandType.Text;
                         await command.ExecuteNonQueryAsync();
                     }
                     catch (SqlException ex)
                     {
                         await Console.Out.WriteLineAsync(ex.Message);
-                        throw;
+                        try
+                        {
+                            //Try to roll back all changes
+                            await transaction?.RollbackAsync();
+                        }
+                        catch (TransactionException ex2)
+                        {
+                            await Console.Out.WriteLineAsync(ex2.Message);
+                            throw;
+                        }
+                    }
+                    finally
+                    {
+                        //If the transaction is successful, all changes will be committed to the database.
+                        await transaction.CommitAsync();
                     }
                 }
             } while (queriesStack.Count > 0);
@@ -214,7 +231,7 @@ namespace Artsofte.Data
         }
         /// <summary>
         /// Fills the database with test data.
-        /// Uses the Stack collection to fills the database with queries.
+        /// Uses the Stack collection to fills the database by querys queue.
         /// </summary>
         /// <returns>A task representing the asynchronous operation.</returns>
         private async Task FillDataBaseAsync()
@@ -226,19 +243,38 @@ namespace Artsofte.Data
             queriesStack.Push(await @File.ReadAllTextAsync(Path.Combine(_pathToSqlQueries, "AddTestLanguages.sql"), Encoding.GetEncoding(1251)));
 
             await OpenConnectionAsync();
+            //Uses sequential execution of saved strings and adds them in a while loop.
             do
             {
                 using (SqlCommand command = new SqlCommand(queriesStack.Pop(), _sqlConnection))
                 {
+                    //If there are problems during a transaction, all changes will be rolled back.
+                    SqlTransaction transaction = null;
                     try
                     {
+                        transaction = _sqlConnection.BeginTransaction();
+                        command.Transaction = transaction;
                         command.CommandType = CommandType.Text;
                         await command.ExecuteNonQueryAsync();
                     }
                     catch (SqlException ex)
-                    {
+                    {                        
                         await Console.Out.WriteLineAsync(ex.Message);
-                        throw;
+                        try
+                        {
+                            //Try to roll back all changes
+                            await transaction?.RollbackAsync();
+                        }
+                        catch(TransactionException ex2)
+                        {
+                            await Console.Out.WriteLineAsync(ex2.Message);
+                            throw;
+                        }
+                    }
+                    finally
+                    {
+                        //If the transaction is successful, all changes will be committed to the database.
+                        await transaction.CommitAsync();
                     }
                 }
             } while (queriesStack.Count > 0);
@@ -388,9 +424,17 @@ namespace Artsofte.Data
                 }
                 catch (SqlException ex)
                 {
-                    await transaction?.RollbackAsync();
                     await Console.Out.WriteLineAsync(ex.Message);
-                    throw;
+                    try
+                    {
+                        //Try to roll back all changes
+                        await transaction?.RollbackAsync();
+                    }
+                    catch (TransactionException ex2)
+                    {
+                        await Console.Out.WriteLineAsync(ex2.Message);
+                        throw;
+                    }
                 }
                 finally
                 {
@@ -433,9 +477,17 @@ namespace Artsofte.Data
                 }
                 catch (SqlException ex)
                 {
-                    transaction?.Rollback();
                     await Console.Out.WriteLineAsync(ex.Message);
-                    throw;
+                    try
+                    {
+                        //Try to roll back all changes
+                        await transaction?.RollbackAsync();
+                    }
+                    catch (TransactionException ex2)
+                    {
+                        await Console.Out.WriteLineAsync(ex2.Message);
+                        throw;
+                    }
                 }
                 finally
                 {
@@ -477,9 +529,17 @@ namespace Artsofte.Data
                 }
                 catch (SqlException ex)
                 {
-                    await transaction?.RollbackAsync();
                     await Console.Out.WriteLineAsync(ex.Message);
-                    throw;
+                    try
+                    {
+                        //Try to roll back all changes
+                        await transaction?.RollbackAsync();
+                    }
+                    catch (TransactionException ex2)
+                    {
+                        await Console.Out.WriteLineAsync(ex2.Message);
+                        throw;
+                    }
                 }
                 finally
                 {
@@ -496,6 +556,8 @@ namespace Artsofte.Data
         #region Delete
         /// <summary>
         /// Deletes a record of the <see cref="Employee"/> from the database.
+        /// If there are problems during a transaction, all changes will be rolled back.If the transaction is successful, all changes will be committed to the database.
+        /// Finally, refreshes data from the database after update.
         /// </summary>
         /// <param name="employee">The <see cref="Employee"/> to be deleted.</param>
         /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
@@ -520,9 +582,17 @@ namespace Artsofte.Data
                 }
                 catch (SqlException ex)
                 {
-                    await transaction?.RollbackAsync();
                     await Console.Out.WriteLineAsync(ex.Message);
-                    throw;
+                    try
+                    {
+                        //Try to roll back all changes
+                        await transaction?.RollbackAsync();
+                    }
+                    catch (TransactionException ex2)
+                    {
+                        await Console.Out.WriteLineAsync(ex2.Message);
+                        throw;
+                    }
                 }
                 finally
                 {
@@ -536,6 +606,8 @@ namespace Artsofte.Data
         }
         /// <summary>
         /// Deletes a record of the <see cref="Department"/> from the database.
+        /// If there are problems during a transaction, all changes will be rolled back.If the transaction is successful, all changes will be committed to the database.
+        /// Finally, refreshes data from the database after update.
         /// </summary>
         /// <param name="employee">The <see cref="Department"/> to be deleted.</param>
         /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
@@ -560,9 +632,17 @@ namespace Artsofte.Data
                 }
                 catch (SqlException ex)
                 {
-                    await transaction?.RollbackAsync();
                     await Console.Out.WriteLineAsync(ex.Message);
-                    throw;
+                    try
+                    {
+                        //Try to roll back all changes
+                        await transaction?.RollbackAsync();
+                    }
+                    catch (TransactionException ex2)
+                    {
+                        await Console.Out.WriteLineAsync(ex2.Message);
+                        throw;
+                    }
                 }
                 finally
                 {
@@ -576,6 +656,8 @@ namespace Artsofte.Data
         }
         /// <summary>
         /// Deletes a record of the <see cref="ProgrammingLanguage"/> from the database.
+        /// If there are problems during a transaction, all changes will be rolled back.If the transaction is successful, all changes will be committed to the database.
+        /// Finally, refreshes data from the database after update.
         /// </summary>
         /// <param name="employee">The <see cref="ProgrammingLanguage"/> to be deleted.</param>
         /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
@@ -600,9 +682,17 @@ namespace Artsofte.Data
                 }
                 catch (SqlException ex)
                 {
-                    await transaction?.RollbackAsync();
                     await Console.Out.WriteLineAsync(ex.Message);
-                    throw;
+                    try
+                    {
+                        //Try to roll back all changes
+                        await transaction?.RollbackAsync();
+                    }
+                    catch (TransactionException ex2)
+                    {
+                        await Console.Out.WriteLineAsync(ex2.Message);
+                        throw;
+                    }
                 }
                 finally
                 {
@@ -619,6 +709,8 @@ namespace Artsofte.Data
         #region Update
         /// <summary>
         /// Updates the data of an existing <see cref="Employee"/> in the database.
+        /// If there are problems during a transaction, all changes will be rolled back.If the transaction is successful, all changes will be committed to the database.
+        /// Finally, refreshes data from the database after update.
         /// </summary>
         /// <param name="employee">The <see cref="Employee"/> to update.</param>
         /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
@@ -646,9 +738,17 @@ namespace Artsofte.Data
                 }
                 catch (SqlException ex)
                 {
-                    await transaction?.RollbackAsync();
                     await Console.Out.WriteLineAsync(ex.Message);
-                    throw;
+                    try
+                    {
+                        //Try to roll back all changes
+                        await transaction?.RollbackAsync();
+                    }
+                    catch (TransactionException ex2)
+                    {
+                        await Console.Out.WriteLineAsync(ex2.Message);
+                        throw;
+                    }
                 }
                 finally
                 {
@@ -662,6 +762,8 @@ namespace Artsofte.Data
         }
         /// <summary>
         /// Updates the data of an existing <see cref="Department"/> in the database.
+        /// If there are problems during a transaction, all changes will be rolled back.If the transaction is successful, all changes will be committed to the database.
+        /// Finally, refreshes data from the database after update.
         /// </summary>
         /// <param name="department">The <see cref="Department"/> to update.</param>
         /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
@@ -689,9 +791,17 @@ namespace Artsofte.Data
                 }
                 catch (SqlException ex)
                 {
-                    await transaction?.RollbackAsync();
                     await Console.Out.WriteLineAsync(ex.Message);
-                    throw;
+                    try
+                    {
+                        //Try to roll back all changes
+                        await transaction?.RollbackAsync();
+                    }
+                    catch (TransactionException ex2)
+                    {
+                        await Console.Out.WriteLineAsync(ex2.Message);
+                        throw;
+                    }
                 }
                 finally
                 {
@@ -705,6 +815,8 @@ namespace Artsofte.Data
         }
         /// <summary>
         /// Updates the data of an existing <see cref="ProgrammingLanguage"/> in the database.
+        /// If there are problems during a transaction, all changes will be rolled back.If the transaction is successful, all changes will be committed to the database.
+        /// Finally, refreshes data from the database after update.
         /// </summary>
         /// <param name="language">The <see cref="ProgrammingLanguage"/> to update.</param>
         /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
@@ -732,9 +844,17 @@ namespace Artsofte.Data
                 }
                 catch (SqlException ex)
                 {
-                    await transaction?.RollbackAsync();
                     await Console.Out.WriteLineAsync(ex.Message);
-                    throw;
+                    try
+                    {
+                        //Try to roll back all changes
+                        await transaction?.RollbackAsync();
+                    }
+                    catch (TransactionException ex2)
+                    {
+                        await Console.Out.WriteLineAsync(ex2.Message);
+                        throw;
+                    }
                 }
                 finally
                 {

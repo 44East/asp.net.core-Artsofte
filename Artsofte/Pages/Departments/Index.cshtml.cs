@@ -26,7 +26,7 @@ namespace Artsofte.Pages.Departments
         public IList<Department> Departments { get; set; }
 
         /// <summary>
-        /// Retrieves a list of <see cref="Models.Department"/> from the database and sorts them based on the specified <see cref="DepartmentSortState"/> states.
+        /// Receives a collection of <see cref="Models.Department"/> from the <see cref="ModelsDataAccessLayer"/> and sorts them based on the specified <see cref="DepartmentSortState"/> states.
         /// </summary>
         /// <param name="sortOrder">The sorting order for the employee data. Default value is <see cref="DepartmentSortState.NameAsc"/>.</param>
         /// <returns>A task that represents the asynchronous operation of retrieving and sorting employees.</returns>

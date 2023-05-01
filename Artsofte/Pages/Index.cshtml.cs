@@ -1,5 +1,4 @@
 using Artsofte.Data;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace Artsofte.Pages

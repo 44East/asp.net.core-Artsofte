@@ -47,7 +47,7 @@ namespace Artsofte.Pages.ProgrammingLanguages
             {
                 return Page();
             }
-            //binding data on the ViewModel and insert it into the DB
+            //send data of the ViewModel and insert it into the DB
             await _models.InsertProgrammingLanguages(ProgrammingLanguageVM);
 
             return RedirectToPage("./Index");

@@ -25,7 +25,7 @@ namespace Artsofte.Pages.ProgrammingLanguages
         public IList<ProgrammingLanguage> ProgrammingLanguages { get;set; }
 
         /// <summary>
-        /// Retrieves a list of <see cref="Models.ProgrammingLanguage"/> from the database and sorts them based on the specified <see cref="ProgLanguageSortState"/> states.
+        /// Receives a collection of <see cref="Models.ProgrammingLanguage"/> from the <see cref="ModelsDataAccessLayer"/> and sorts them based on the specified <see cref="ProgLanguageSortState"/> states.
         /// </summary>
         /// <param name="sortOrder">The sorting order for the employee data. Default value is <see cref="ProgLanguageSortState.NameAsc"/>.</param>
         /// <returns>A task that represents the asynchronous operation of retrieving and sorting employees.</returns>
