@@ -15,7 +15,7 @@
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <div class="form-group">
                 <label asp-for="ProgrammingLanguageVM.Name" class="control-label"></label>
-                <input asp-for="ProgrammingLanguageVM.Name" class="form-control" />
+                <input asp-for="ProgrammingLanguageVM.Name" class="form-control" maxlength="30" />
                 <span asp-validation-for="ProgrammingLanguageVM.Name" class="text-danger"></span>
             </div>
             <div class="form-group">

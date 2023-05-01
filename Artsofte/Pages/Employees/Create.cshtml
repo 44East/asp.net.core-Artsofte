@@ -13,17 +13,17 @@
 <form method="post">
     <div class="form-group">
         <label asp-for="EmployeeVM.Name"></label>
-        <input asp-for="EmployeeVM.Name" class="form-control" />
+        <input asp-for="EmployeeVM.Name" class="form-control" maxlength="30"/>
         <span asp-validation-for="EmployeeVM.Name" class="text-danger"></span>
     </div>
     <div class="form-group">
         <label asp-for="EmployeeVM.Surname"></label>
-        <input asp-for="EmployeeVM.Surname" class="form-control" />
+        <input asp-for="EmployeeVM.Surname" class="form-control" maxlength="30" />
         <span asp-validation-for="EmployeeVM.Surname" class="text-danger"></span>
     </div>
     <div class="form-group">
         <label asp-for="EmployeeVM.Age"></label>
-        <input asp-for="EmployeeVM.Age" class="form-control" type="number" min="18" max="65" />
+        <input asp-for="EmployeeVM.Age" class="form-control" type="number" min="18" max="65" maxlength="2"/>
         <span asp-validation-for="EmployeeVM.Age" class="text-danger"></span>
     </div>
     <div class="form-group">
