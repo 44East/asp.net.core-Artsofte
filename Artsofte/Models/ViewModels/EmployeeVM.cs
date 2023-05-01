@@ -1,5 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-namespace Artsofte.Models.ViewModels
+﻿namespace Artsofte.Models.ViewModels
 {
     /// <summary>
     /// This is a view model for <see cref="Employee"/>. It includes only the data fields required for binding data during creation.

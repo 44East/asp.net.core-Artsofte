@@ -39,8 +39,11 @@ namespace Artsofte.Pages.Employees
             {
                 return NotFound();
             }
-
-            var employee = await _context.Employees.FirstOrDefaultAsync(m => m.Id == id);
+            //Binding data from the conected tables
+            var employee = await _context.Employees
+                                  .Include(d => d.Department)
+                                  .Include(p => p.ProgrammingLanguage)
+                                  .FirstOrDefaultAsync(m => m.Id == id);
 
             if (employee == null)
             {
